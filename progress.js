@@ -51,8 +51,9 @@
         unitTitle: u.name,
         unitNo: u.no,
         title: "考前测试",
-        kind: (u.examComplete ? "完整卷" : "部分卷") +
-          (u.examPages ? " · " + u.examPages + " 页 JPG" : " · 待补") +
+        kind:
+          "4 页试卷 + 答案可单打" +
+          (u.examComplete ? " · 完整源卷" : " · 含待补页") +
           " · 30–40 分钟",
         lessonLabel: "第二课",
         unit: u,
