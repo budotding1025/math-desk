@@ -201,23 +201,12 @@
         const ans = document.createElement("button");
         ans.type = "button";
         ans.className = "mod-btn";
-        ans.innerHTML = "打印参考答案<small>单独答案页 · 也可打开「试卷+答案」合订本</small>";
+        ans.innerHTML = "打印参考答案<small>单独答案页</small>";
         ans.onclick = () => {
           openPdf(node.unit.examAnswerPdf);
           $("pathNodeOverlay").classList.add("hidden");
         };
         grid.appendChild(ans);
-      }
-      if (node.unit.examFullPdf) {
-        const full = document.createElement("button");
-        full.type = "button";
-        full.className = "mod-btn";
-        full.innerHTML = "打开合订本（试卷+答案）<small>卷面后附答案页</small>";
-        full.onclick = () => {
-          openPdf(node.unit.examFullPdf);
-          $("pathNodeOverlay").classList.add("hidden");
-        };
-        grid.appendChild(full);
       }
     }
 
