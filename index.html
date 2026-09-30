@@ -2,70 +2,157 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>数学书桌 · Math Desk</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./theme.css?v=2" />
-  <script src="./data-daily.js?v=1"></script>
+  <link rel="stylesheet" href="./theme.css?v=3" />
 </head>
 <body>
-  <div class="app no-print">
-    <header class="top">
-      <div>
-        <p class="tag">已上线 · 天蓝主色</p>
-        <h1 class="brand">数学书桌</h1>
+  <!-- HOME -->
+  <div class="screen no-print" id="screenHome">
+    <div class="top">
+      <div class="brand">数学书桌</div>
+      <button type="button" class="icon-btn" id="btnSettings" aria-label="说明" title="说明">?</button>
+    </div>
+    <div class="home-main">
+      <div class="hero-mark" aria-hidden="true">数</div>
+      <p class="mascot-line">查漏 + 提速 · 日常约 15 分钟 · 考前 30–40 分钟</p>
+      <p class="streak" id="streakLine">连续 <strong>0</strong> 天</p>
+      <div class="today-card">
+        <p class="eyebrow" id="sessionEyebrow">第二单元</p>
+        <h1 id="sessionTitle">日常练习 · 组卷打印</h1>
+        <p class="meta" id="sessionMeta">今日练习</p>
+        <div class="home-cta-row">
+          <button type="button" class="btn-start" id="btnHomePrimary">开始组卷</button>
+          <button type="button" class="btn-secondary" id="btnHomeSecondary">打开考前卷</button>
+        </div>
+        <button type="button" class="btn-path" id="btnOpenPath">看学期路径</button>
       </div>
-      <a class="link-out" href="https://budotding1025.github.io/math-desk/">线上页</a>
-    </header>
+      <p class="unit-line" id="unitLine">第二单元 · 角的度量</p>
+      <p class="path-summary" id="pathSummary">路径进度</p>
+    </div>
+  </div>
 
-    <p class="lead">
-      <b>日常练习</b>选 ①计算 / ②重难点 / ③应用题（可多选）→ 排成 A4 → 打印或另存 PDF。<br />
-      选 1 项：约 <b>15 分钟</b>；选多项：每块仍按约 15 分钟，可分次练（多页 A4）。
-      考前测试固定 <b>30–40 分钟</b>。
-    </p>
+  <!-- PATH -->
+  <div class="screen hidden no-print" id="screenPath">
+    <div class="path-top">
+      <span style="width:42px"></span>
+      <h1>学期学习路径</h1>
+      <span style="width:42px"></span>
+    </div>
+    <p class="path-meta" id="pathMeta">按单元 · 日常练习 / 考前测试</p>
+    <div class="path-scroll" id="pathList"></div>
+  </div>
 
-    <section class="card composer">
-      <h2>日常练习 · 组卷打印</h2>
-      <div class="row">
-        <label>单元
-          <select id="unitSelect"></select>
-        </label>
+  <div class="overlay is-center hidden no-print" id="pathNodeOverlay" aria-hidden="true">
+    <div class="sheet" role="dialog">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 id="pathNodeTitle">本站</h2>
+        <button type="button" class="icon-btn" id="pathNodeClose" aria-label="关闭">×</button>
       </div>
+      <p class="meta" id="pathNodeMeta"></p>
+      <div class="mod-grid" id="pathModGrid"></div>
+    </div>
+  </div>
+
+  <!-- RECORDS -->
+  <div class="screen hidden no-print" id="screenRecords">
+    <div class="path-top records-top">
+      <span style="width:42px"></span>
+      <h1>记录 · 错题库</h1>
+      <span style="width:42px"></span>
+    </div>
+    <div class="records-score" id="recordsScore"></div>
+    <p class="path-meta">各单元错题重练纸（可打印）</p>
+    <div class="records-actions" id="recordsActions"></div>
+    <p class="path-meta" id="recordsMeta">我的错题</p>
+    <form class="mistake-form" id="mistakeForm">
+      <label>单元
+        <select id="mistakeUnit"></select>
+      </label>
+      <label>类型
+        <select id="mistakeKind">
+          <option value="计算错">计算错</option>
+          <option value="概念错">概念错</option>
+          <option value="审题错">审题错</option>
+          <option value="其他">其他</option>
+        </select>
+      </label>
+      <label>错题摘录
+        <textarea id="mistakeText" rows="2" placeholder="写原题或错在哪"></textarea>
+      </label>
+      <label>订正要点（可选）
+        <input id="mistakeNote" type="text" placeholder="一句话写对" />
+      </label>
+      <div class="actions" style="margin-top:10px">
+        <button type="submit" class="btn primary">加入错题库</button>
+      </div>
+    </form>
+    <div class="path-scroll" id="recordsList"></div>
+  </div>
+
+  <!-- 日常组卷弹层 -->
+  <div class="overlay is-center hidden no-print" id="composeOverlay">
+    <div class="sheet wide" role="dialog">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 id="composeTitle">日常练习 · 组卷</h2>
+        <button type="button" class="icon-btn" id="composeClose" aria-label="关闭">×</button>
+      </div>
+      <p class="meta" id="composeMeta">约 15 分钟 · 选 ①②③ 排成 A4</p>
       <div class="checks" id="trackChecks">
         <label class="check"><input type="checkbox" value="calc" checked /> ① 日常计算</label>
         <label class="check"><input type="checkbox" value="key" /> ② 重难点题型</label>
         <label class="check"><input type="checkbox" value="app" /> ③ 应用题</label>
       </div>
       <div class="checks" id="layoutMode">
-        <label class="check"><input type="radio" name="layout" value="combine" checked /> 合订一张 A4（多项合计约 15 分钟）</label>
-        <label class="check"><input type="radio" name="layout" value="split" /> 分项分页（每项约 15 分钟）</label>
+        <label class="check"><input type="radio" name="layout" value="combine" checked /> 合订一张 A4</label>
+        <label class="check"><input type="radio" name="layout" value="split" /> 分项分页</label>
       </div>
-      <p class="hint" id="selectHint">已选 1 项 · 1 页 A4 · 约 15 分钟</p>
+      <p class="hint" id="selectHint">已选 1 项 · 合订 1 页 · 约 15 分钟</p>
       <div class="actions">
-        <button type="button" class="btn primary" id="btnBuild">生成 A4 预览</button>
-        <button type="button" class="btn" id="btnPrint" disabled>打印 / 另存 PDF</button>
+        <button type="button" class="btn primary" id="btnBuild">生成并打印</button>
         <button type="button" class="btn" id="btnDownload" disabled>下载 HTML</button>
       </div>
-    </section>
-
-    <section class="card">
-      <h2>考前测试 · 30–40 分钟</h2>
-      <div class="list" id="examList"></div>
-    </section>
-
-    <section class="card">
-      <h2>错题库模板</h2>
-      <div class="list" id="wrongList"></div>
-    </section>
-
-    <p class="note">本地：双击 <code>打开数学书桌.bat</code>。线上：与语文书桌相同，GitHub Pages。</p>
+    </div>
   </div>
 
-  <!-- A4 print stack -->
+  <nav class="app-nav no-print" id="appNav" aria-label="主导航">
+    <button type="button" class="nav-item is-on" data-nav="home" id="navHome">
+      <span class="nav-emoji" aria-hidden="true">⌂</span>
+      <span>主页</span>
+    </button>
+    <button type="button" class="nav-item" data-nav="path" id="navPath">
+      <span class="nav-emoji" aria-hidden="true">◎</span>
+      <span>路径</span>
+    </button>
+    <button type="button" class="nav-item" data-nav="records" id="navRecords">
+      <span class="nav-emoji" aria-hidden="true">≡</span>
+      <span>记录</span>
+    </button>
+  </nav>
+
+  <div class="overlay is-center hidden no-print" id="helpOverlay">
+    <div class="sheet">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>怎么用</h2>
+        <button type="button" class="icon-btn" id="btnCloseHelp">×</button>
+      </div>
+      <p style="line-height:1.6;margin:0;color:var(--muted)">
+        <b>主页</b>：当前单元进度（现为第二单元 · 日常练习）。<br/>
+        <b>路径</b>：每个单元 → 日常练习组卷打印、考前测试。<br/>
+        <b>记录</b>：错题库（登记 + 各单元重练纸）。<br/>
+        日常约 15 分钟；考前测试 30–40 分钟。
+      </p>
+    </div>
+  </div>
+
   <div id="printRoot" class="print-root" aria-live="polite"></div>
 
-  <script src="./app.js?v=2"></script>
+  <script src="./data.js?v=1"></script>
+  <script src="./data-daily.js?v=1"></script>
+  <script src="./progress.js?v=1"></script>
+  <script src="./app.js?v=5"></script>
 </body>
 </html>
