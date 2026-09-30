@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./theme.css?v=10" />
+  <link rel="stylesheet" href="./theme.css?v=11" />
 </head>
 <body>
   <!-- HOME -->
@@ -65,60 +65,117 @@
       <span style="width:48px"></span>
     </div>
     <div class="records-score" id="recordsScore"></div>
-    <p class="path-meta">红笔批改 → 勾选题号入库（拍照可选，可后补）→ 考前重练原题 / 类似题</p>
+    <p class="path-meta">红笔批改后，对照卷面点红圈圈出错题 → 考前重练原题 / 类似题</p>
 
-    <form class="mistake-form" id="mistakeForm">
-      <p class="form-lead">拍照录入（照片可不选）</p>
-      <div class="photo-row">
-        <label class="photo-btn">
-          拍照 / 选图
-          <input type="file" id="mistakePhoto" accept="image/*" capture="environment" hidden />
+    <div class="mark-cta-wrap">
+      <button type="button" class="btn-mark-cta" id="btnOpenMark">
+        对照卷面 · 圈出错题
+        <small>看着卷子点题号，点一下就记下</small>
+      </button>
+    </div>
+
+    <details class="mistake-advanced">
+      <summary>更多录入方式（拍照 / 手写摘录）</summary>
+      <form class="mistake-form" id="mistakeForm">
+        <p class="form-lead">拍照录入（照片可不选）</p>
+        <div class="photo-row">
+          <label class="photo-btn">
+            拍照 / 选图
+            <input type="file" id="mistakePhoto" accept="image/*" capture="environment" hidden />
+          </label>
+          <button type="button" class="btn" id="mistakePhotoClear" hidden>清除照片</button>
+        </div>
+        <div class="photo-preview hidden" id="mistakePhotoPreview">
+          <img id="mistakePhotoImg" alt="批改卷预览" />
+        </div>
+
+        <label>单元
+          <select id="mistakeUnit"></select>
         </label>
-        <button type="button" class="btn" id="mistakePhotoClear" hidden>清除照片</button>
-      </div>
-      <div class="photo-preview hidden" id="mistakePhotoPreview">
-        <img id="mistakePhotoImg" alt="批改卷预览" />
-      </div>
-
-      <label>单元
-        <select id="mistakeUnit"></select>
-      </label>
-      <label>来源
-        <select id="mistakeSource">
-          <option value="daily-calc">日常 · ① 计算</option>
-          <option value="daily-key">日常 · ② 重难点</option>
-          <option value="daily-app">日常 · ③ 应用题</option>
-          <option value="exam">考前测试</option>
-        </select>
-      </label>
-      <label>错因
-        <select id="mistakeKind">
-          <option value="计算错">计算错</option>
-          <option value="概念错">概念错</option>
-          <option value="审题错">审题错</option>
-          <option value="其他">其他</option>
-        </select>
-      </label>
-      <label>勾选错题题号 <span class="soft">（必选，至少一题）</span>
-        <div class="item-nos" id="mistakeItemNos"></div>
-      </label>
-      <label>题干摘录 <span class="soft">（日常可自动填，可改）</span>
-        <textarea id="mistakeText" rows="3" placeholder="勾选题号后自动带出题干；考前卷请手写摘录"></textarea>
-      </label>
-      <label>订正要点（可选）
-        <input id="mistakeNote" type="text" placeholder="一句话写对" />
-      </label>
-      <div class="actions" style="margin-top:10px">
-        <button type="submit" class="btn primary">加入错题库</button>
-        <button type="button" class="btn" id="btnExportMistakes">导出备份</button>
-      </div>
-    </form>
+        <label>来源
+          <select id="mistakeSource">
+            <option value="daily-calc">日常 · ① 计算</option>
+            <option value="daily-key">日常 · ② 重难点</option>
+            <option value="daily-app">日常 · ③ 应用题</option>
+            <option value="exam">考前测试</option>
+          </select>
+        </label>
+        <label>错因
+          <select id="mistakeKind">
+            <option value="计算错">计算错</option>
+            <option value="概念错">概念错</option>
+            <option value="审题错">审题错</option>
+            <option value="其他">其他</option>
+          </select>
+        </label>
+        <label>勾选错题题号 <span class="soft">（必选，至少一题）</span>
+          <div class="item-nos" id="mistakeItemNos"></div>
+        </label>
+        <label>题干摘录 <span class="soft">（日常可自动填，可改）</span>
+          <textarea id="mistakeText" rows="3" placeholder="勾选题号后自动带出题干；考前卷请手写摘录"></textarea>
+        </label>
+        <label>订正要点（可选）
+          <input id="mistakeNote" type="text" placeholder="一句话写对" />
+        </label>
+        <div class="actions" style="margin-top:10px">
+          <button type="submit" class="btn primary">加入错题库</button>
+          <button type="button" class="btn" id="btnExportMistakes">导出备份</button>
+        </div>
+      </form>
+    </details>
 
     <p class="path-meta">各单元空白错题重练纸（可选）</p>
     <div class="records-actions" id="recordsActions"></div>
 
     <p class="path-meta" id="recordsMeta">我的错题</p>
     <div class="path-scroll" id="recordsList"></div>
+  </div>
+
+  <!-- 卷面对照 · 圈错题 -->
+  <div class="overlay is-center hidden no-print" id="markOverlay">
+    <div class="sheet mark-sheet" role="dialog" aria-labelledby="markTitle">
+      <div class="mark-head">
+        <div>
+          <h2 id="markTitle">对照卷面 · 圈错题</h2>
+          <p class="meta" id="markMeta">看着卷子，点红圈＝这题错了</p>
+        </div>
+        <button type="button" class="icon-btn" id="markClose" aria-label="关闭">×</button>
+      </div>
+
+      <div class="mark-filters">
+        <label>单元
+          <select id="markUnit"></select>
+        </label>
+        <label>来源
+          <select id="markSource">
+            <option value="exam">考前测试</option>
+            <option value="daily-calc">日常 · ① 计算</option>
+            <option value="daily-key">日常 · ② 重难点</option>
+            <option value="daily-app">日常 · ③ 应用题</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="mark-paper" id="markPaper">
+        <div class="mark-paper-tools">
+          <button type="button" class="btn" id="markOpenPaper">打开卷面</button>
+          <label class="photo-btn-inline mark-photo-btn">拍批改照（可选）
+            <input type="file" id="markPhoto" accept="image/*" capture="environment" hidden />
+          </label>
+        </div>
+        <div class="mark-paper-frame" id="markPaperFrame">
+          <p class="mark-paper-hint" id="markPaperHint">卷面会显示在这里；手机上也可新窗口打开对照。</p>
+        </div>
+      </div>
+
+      <p class="mark-guide">点题号圈出错的题 <span id="markSelectedHint">还没圈</span></p>
+      <div class="mark-nos" id="markNos" role="group" aria-label="错题题号"></div>
+
+      <div class="mark-actions">
+        <button type="button" class="btn" id="markClear">清空圈选</button>
+        <button type="button" class="btn primary" id="markSave">记上了</button>
+      </div>
+    </div>
   </div>
 
   <!-- 看原图 -->
@@ -197,8 +254,8 @@
       </div>
       <p class="help-copy">
         <b>主页</b>：当前单元进度（现为第二单元 · 日常练习）。<br/>
-        <b>路径</b>：每个单元 → 日常练习组卷打印、考前测试。做完用红笔批改，到「记录」勾选题号入库。<br/>
-        <b>记录</b>：错题库（勾选题号必选；拍照可选可后补）→ 重练原题 / 练类似题。<br/>
+        <b>路径</b>：每个单元 → 日常练习组卷打印、考前测试。做完用红笔批改，到「记录」对照卷面圈出错题。<br/>
+        <b>记录</b>：对照卷面点题号入库（拍照可选）→ 重练原题 / 练类似题。<br/>
         日常约 15 分钟（参考单元练习题型 · 变式非原题）；考前测试 30–40 分钟。
       </p>
     </div>
@@ -206,10 +263,10 @@
 
   <div id="printRoot" class="print-root" aria-live="polite"></div>
 
-  <script src="./data.js?v=5"></script>
+  <script src="./data.js?v=6"></script>
   <script src="./data-daily.js?v=5"></script>
   <script src="./progress.js?v=4"></script>
   <script src="./wrong-store.js?v=1"></script>
-  <script src="./app.js?v=11"></script>
+  <script src="./app.js?v=12"></script>
 </body>
 </html>

@@ -15,6 +15,9 @@
     pendingPhotoUrl: "",
     photoViewId: "",
     objectUrls: [],
+    markSelected: new Set(),
+    markPhotoBlob: null,
+    markPhotoUrl: "",
   };
 
   const SOURCE_LABEL = {
@@ -60,11 +63,190 @@
   }
 
   function sourceItemCount(unitId, source) {
-    if (source === "exam") return 12;
+    if (source === "exam") {
+      const u = P.unitById(unitId);
+      // 考前卷按页数给足可圈题号（孩子对照卷面点号，宁多勿少）
+      const pages = (u && u.examPages) || 4;
+      return Math.max(12, pages * 6);
+    }
     const track = trackFromSource(source);
     const bank = dailyBank(unitId);
     const section = bank && bank[track];
     return (section && section.items && section.items.length) || 6;
+  }
+
+  function paperUrlFor(unitId, source) {
+    const u = P.unitById(unitId);
+    if (!u) return "";
+    if (source === "exam") return u.examPdf || "";
+    return "";
+  }
+
+  function clearMarkPhoto() {
+    if (state.markPhotoUrl) URL.revokeObjectURL(state.markPhotoUrl);
+    state.markPhotoBlob = null;
+    state.markPhotoUrl = "";
+    if ($("markPhoto")) $("markPhoto").value = "";
+  }
+
+  function updateMarkSelectedHint() {
+    const nos = Array.from(state.markSelected).sort((a, b) => a - b);
+    $("markSelectedHint").textContent = nos.length
+      ? "已圈 " + nos.join("、")
+      : "还没圈";
+  }
+
+  function renderMarkNos() {
+    const unitId = $("markUnit").value;
+    const source = $("markSource").value;
+    const n = sourceItemCount(unitId, source);
+    const host = $("markNos");
+    host.innerHTML = "";
+    // 保留仍有效的圈选
+    const next = new Set();
+    state.markSelected.forEach((x) => {
+      if (x >= 1 && x <= n) next.add(x);
+    });
+    state.markSelected = next;
+    for (let i = 1; i <= n; i++) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "mark-no" + (state.markSelected.has(i) ? " is-on" : "");
+      btn.textContent = String(i);
+      btn.setAttribute("aria-pressed", state.markSelected.has(i) ? "true" : "false");
+      btn.onclick = () => {
+        if (state.markSelected.has(i)) state.markSelected.delete(i);
+        else state.markSelected.add(i);
+        btn.classList.toggle("is-on", state.markSelected.has(i));
+        btn.setAttribute("aria-pressed", state.markSelected.has(i) ? "true" : "false");
+        updateMarkSelectedHint();
+      };
+      host.appendChild(btn);
+    }
+    updateMarkSelectedHint();
+  }
+
+  function refreshMarkPaper() {
+    const unitId = $("markUnit").value;
+    const source = $("markSource").value;
+    const frame = $("markPaperFrame");
+    const url = paperUrlFor(unitId, source);
+    frame.innerHTML = "";
+
+    if (state.markPhotoUrl) {
+      const img = document.createElement("img");
+      img.src = state.markPhotoUrl;
+      img.alt = "批改照片对照";
+      frame.appendChild(img);
+      $("markOpenPaper").textContent = url ? "打开原卷 PDF" : "打开卷面";
+      return;
+    }
+
+    if (source === "exam" && url) {
+      const iframe = document.createElement("iframe");
+      iframe.title = "考前试卷对照";
+      iframe.src = url;
+      frame.appendChild(iframe);
+      $("markOpenPaper").textContent = "新窗口打开卷面";
+      return;
+    }
+
+    // 日常：列出题干，方便对照刚做的纸
+    const track = trackFromSource(source);
+    const bank = dailyBank(unitId);
+    const section = bank && bank[track];
+    if (section && section.items && section.items.length) {
+      const ul = document.createElement("ul");
+      ul.className = "mark-daily-list";
+      section.items.forEach((raw, idx) => {
+        const li = document.createElement("li");
+        const n = document.createElement("span");
+        n.className = "n";
+        n.textContent = idx + 1 + ".";
+        const t = document.createElement("span");
+        t.textContent = itemText(raw);
+        li.appendChild(n);
+        li.appendChild(t);
+        ul.appendChild(li);
+      });
+      frame.appendChild(ul);
+      $("markOpenPaper").textContent = "日常卷请对照打印纸";
+      return;
+    }
+
+    const p = document.createElement("p");
+    p.className = "mark-paper-hint";
+    p.id = "markPaperHint";
+    p.textContent = "暂无电子卷面，请对着打印纸点题号圈错。";
+    frame.appendChild(p);
+    $("markOpenPaper").textContent = "打开卷面";
+  }
+
+  function openMarkSheet(opts) {
+    opts = opts || {};
+    const sel = $("markUnit");
+    sel.innerHTML = DATA.units
+      .map((u) => '<option value="' + u.id + '">' + u.name + "</option>")
+      .join("");
+    const preferUnit =
+      opts.unitId ||
+      (state.node && state.node.unitId) ||
+      (P.currentNode() && P.currentNode().unitId) ||
+      DATA.currentUnitId;
+    if (preferUnit && DATA.units.some((u) => u.id === preferUnit)) sel.value = preferUnit;
+
+    let preferSource = opts.source || "exam";
+    if (!opts.source && state.node) {
+      preferSource = state.node.type === "exam" ? "exam" : "daily-calc";
+    }
+    $("markSource").value = preferSource;
+
+    state.markSelected = new Set(opts.itemNos || []);
+    if (!opts.keepPhoto) clearMarkPhoto();
+    renderMarkNos();
+    refreshMarkPaper();
+    $("markMeta").textContent =
+      preferSource === "exam"
+        ? "看着卷子或下方预览，点红圈＝这题错了"
+        : "对照打印纸或下方题干，点红圈＝这题错了";
+    $("markOverlay").classList.remove("hidden");
+  }
+
+  async function saveMarkSheet() {
+    const nos = Array.from(state.markSelected).sort((a, b) => a - b);
+    if (!nos.length) {
+      alert("先点红圈圈出至少一道错题");
+      return;
+    }
+    const unit = P.unitById($("markUnit").value);
+    const source = $("markSource").value;
+    let text = "";
+    if (source === "exam") {
+      text = "考前测试 · 题号 " + nos.join("、") + "（卷面对照圈选）";
+    } else {
+      text = excerptFromBank(unit.id, source, nos) || "日常练习 · 题号 " + nos.join("、");
+    }
+
+    let photoId = "";
+    if (state.markPhotoBlob) {
+      photoId = await W.savePhotoBlob(state.markPhotoBlob);
+    }
+
+    await W.putMistake({
+      unitId: unit.id,
+      unitTitle: unit.name,
+      source: source,
+      kind: "其他",
+      itemNos: nos,
+      text: text,
+      note: "",
+      photoId: photoId,
+    });
+
+    state.markSelected = new Set();
+    clearMarkPhoto();
+    $("markOverlay").classList.add("hidden");
+    showView("records");
   }
 
   function excerptFromBank(unitId, source, itemNos) {
@@ -167,7 +349,7 @@
     state.node = node;
     $("pathNodeTitle").textContent = node.lessonLabel + " · " + node.title;
     $("pathNodeMeta").textContent =
-      node.unitTitle + " · " + node.kind + " · 做完红笔批改 → 记录页勾选题号入库（拍照可选）";
+      node.unitTitle + " · " + node.kind + " · 做完红笔批改 → 对照卷面圈出错题";
     const grid = $("pathModGrid");
     grid.innerHTML = "";
 
@@ -213,15 +395,13 @@
     const toRec = document.createElement("button");
     toRec.type = "button";
     toRec.className = "mod-btn";
-    toRec.innerHTML = "去做完录入错题<small>勾选题号 · 拍照可选可后补</small>";
+    toRec.innerHTML = "对照卷面圈错题<small>看着卷子点红圈 · 点一下就记下</small>";
     toRec.onclick = () => {
       $("pathNodeOverlay").classList.add("hidden");
-      showView("records");
-      if ($("mistakeUnit")) $("mistakeUnit").value = node.unitId;
-      if ($("mistakeSource")) {
-        $("mistakeSource").value = node.type === "exam" ? "exam" : "daily-calc";
-        refreshItemNos();
-      }
+      openMarkSheet({
+        unitId: node.unitId,
+        source: node.type === "exam" ? "exam" : "daily-calc",
+      });
     };
     grid.appendChild(toRec);
 
@@ -289,7 +469,7 @@
       (store.streak.count || 0) +
       "</b> 天 · 错题 <b>" +
       mistakes.length +
-      "</b> 条<br/><span style='color:var(--muted);font-size:.88rem'>勾选题号即可入库；拍照可选，之后可补</span>";
+      "</b> 条<br/><span style='color:var(--muted);font-size:.88rem'>对照卷面点红圈即可入库；拍照可选</span>";
 
     const actions = $("recordsActions");
     actions.innerHTML = "";
@@ -322,7 +502,7 @@
 
     if (!mistakes.length) {
       list.innerHTML =
-        '<p class="meta" style="padding:8px 0">还没有错题。打印练习 → 红笔批改 → 上方勾选题号入库（拍照可不选）。</p>';
+        '<p class="meta" style="padding:8px 0">还没有错题。打印练习 → 红笔批改 → 上方「对照卷面」圈出错题。</p>';
       return;
     }
 
@@ -796,6 +976,45 @@
   });
   $("btnBuild").onclick = buildAndPrint;
   $("btnDownload").onclick = downloadHtml;
+
+  $("btnOpenMark").onclick = () => openMarkSheet({});
+  $("markClose").onclick = () => $("markOverlay").classList.add("hidden");
+  $("markUnit").onchange = () => {
+    renderMarkNos();
+    refreshMarkPaper();
+  };
+  $("markSource").onchange = () => {
+    renderMarkNos();
+    refreshMarkPaper();
+  };
+  $("markClear").onclick = () => {
+    state.markSelected = new Set();
+    renderMarkNos();
+  };
+  $("markSave").onclick = () => {
+    saveMarkSheet().catch((err) => {
+      console.error(err);
+      alert("记下失败，请重试");
+    });
+  };
+  $("markOpenPaper").onclick = () => {
+    const url = paperUrlFor($("markUnit").value, $("markSource").value);
+    if (url) openPdf(url);
+    else alert("日常练习请对照刚打印的纸点题号");
+  };
+  $("markPhoto").onchange = async () => {
+    const file = $("markPhoto").files && $("markPhoto").files[0];
+    if (!file) return;
+    try {
+      const blob = await W.compressImage(file);
+      clearMarkPhoto();
+      state.markPhotoBlob = blob;
+      state.markPhotoUrl = URL.createObjectURL(blob);
+      refreshMarkPaper();
+    } catch (err) {
+      alert("照片处理失败，可先不拍、只圈题号");
+    }
+  };
 
   $("mistakeUnit").onchange = refreshItemNos;
   $("mistakeSource").onchange = refreshItemNos;
