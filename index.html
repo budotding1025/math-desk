@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./theme.css?v=11" />
+  <link rel="stylesheet" href="./theme.css?v=12" />
 </head>
 <body>
   <!-- HOME -->
@@ -65,12 +65,12 @@
       <span style="width:48px"></span>
     </div>
     <div class="records-score" id="recordsScore"></div>
-    <p class="path-meta">红笔批改后，对照卷面点红圈圈出错题 → 考前重练原题 / 类似题</p>
+    <p class="path-meta">红笔批改后，在原卷上用红笔圈出错题 → 考前重练原题 / 类似题</p>
 
     <div class="mark-cta-wrap">
       <button type="button" class="btn-mark-cta" id="btnOpenMark">
-        对照卷面 · 圈出错题
-        <small>看着卷子点题号，点一下就记下</small>
+        红笔圈错题
+        <small>打开原卷，用红笔直接圈，圈完就记下</small>
       </button>
     </div>
 
@@ -131,13 +131,13 @@
     <div class="path-scroll" id="recordsList"></div>
   </div>
 
-  <!-- 卷面对照 · 圈错题 -->
+  <!-- 原卷红笔圈错题 -->
   <div class="overlay is-center hidden no-print" id="markOverlay">
     <div class="sheet mark-sheet" role="dialog" aria-labelledby="markTitle">
       <div class="mark-head">
         <div>
-          <h2 id="markTitle">对照卷面 · 圈错题</h2>
-          <p class="meta" id="markMeta">看着卷子，点红圈＝这题错了</p>
+          <h2 id="markTitle">红笔圈错题</h2>
+          <p class="meta" id="markMeta">在原卷上用红笔画圈，圈完点「记上了」</p>
         </div>
         <button type="button" class="icon-btn" id="markClose" aria-label="关闭">×</button>
       </div>
@@ -156,23 +156,26 @@
         </label>
       </div>
 
-      <div class="mark-paper" id="markPaper">
-        <div class="mark-paper-tools">
-          <button type="button" class="btn" id="markOpenPaper">打开卷面</button>
-          <label class="photo-btn-inline mark-photo-btn">拍批改照（可选）
-            <input type="file" id="markPhoto" accept="image/*" capture="environment" hidden />
-          </label>
-        </div>
-        <div class="mark-paper-frame" id="markPaperFrame">
-          <p class="mark-paper-hint" id="markPaperHint">卷面会显示在这里；手机上也可新窗口打开对照。</p>
-        </div>
+      <div class="mark-paper-tools">
+        <button type="button" class="btn" id="markPrevPage" hidden>上一页</button>
+        <span class="mark-page-label" id="markPageLabel"></span>
+        <button type="button" class="btn" id="markNextPage" hidden>下一页</button>
+        <label class="photo-btn-inline mark-photo-btn">用照片当卷面
+          <input type="file" id="markPhoto" accept="image/*" capture="environment" hidden />
+        </label>
       </div>
 
-      <p class="mark-guide">点题号圈出错的题 <span id="markSelectedHint">还没圈</span></p>
-      <div class="mark-nos" id="markNos" role="group" aria-label="错题题号"></div>
+      <div class="mark-stage-wrap" id="markStageWrap">
+        <div class="mark-stage" id="markStage">
+          <canvas id="markBase" aria-hidden="true"></canvas>
+          <canvas id="markInk" aria-label="红笔层"></canvas>
+        </div>
+        <p class="mark-paper-hint" id="markPaperHint">正在打开卷面…</p>
+      </div>
 
       <div class="mark-actions">
-        <button type="button" class="btn" id="markClear">清空圈选</button>
+        <button type="button" class="btn" id="markUndo">撤销一笔</button>
+        <button type="button" class="btn" id="markClear">清空红笔</button>
         <button type="button" class="btn primary" id="markSave">记上了</button>
       </div>
     </div>
@@ -254,8 +257,8 @@
       </div>
       <p class="help-copy">
         <b>主页</b>：当前单元进度（现为第二单元 · 日常练习）。<br/>
-        <b>路径</b>：每个单元 → 日常练习组卷打印、考前测试。做完用红笔批改，到「记录」对照卷面圈出错题。<br/>
-        <b>记录</b>：对照卷面点题号入库（拍照可选）→ 重练原题 / 练类似题。<br/>
+        <b>路径</b>：每个单元 → 日常练习组卷打印、考前测试。做完用红笔批改，到「记录」在原卷上红笔圈错题。<br/>
+        <b>记录</b>：原卷红笔圈题入库 → 重练原题 / 练类似题。<br/>
         日常约 15 分钟（参考单元练习题型 · 变式非原题）；考前测试 30–40 分钟。
       </p>
     </div>
@@ -263,10 +266,11 @@
 
   <div id="printRoot" class="print-root" aria-live="polite"></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./data.js?v=6"></script>
   <script src="./data-daily.js?v=5"></script>
   <script src="./progress.js?v=4"></script>
   <script src="./wrong-store.js?v=1"></script>
-  <script src="./app.js?v=12"></script>
+  <script src="./app.js?v=13"></script>
 </body>
 </html>
