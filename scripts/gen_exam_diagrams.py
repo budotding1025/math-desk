@@ -285,6 +285,12 @@ def main():
     draw_mc_120000(OUT / "u1_mc120000_exact.jpg")
     draw_u5_lines(OUT / "u5_lines_exact.jpg")
     draw_u5_shapes(OUT / "u5_shapes_exact.jpg")
+    try:
+        from gen_exam_diagrams_extra import main as extra_main
+
+        extra_main()
+    except Exception as e:
+        print("extras skip:", e)
     print("done")
 
 
