@@ -5,7 +5,7 @@ window.MATH_DESK_DATA = {
   currentTrack: "daily",
   /**
    * 考前卷：Word 按 A4 原卷字号/图宽/排版/留白重排（清晰文字+重绘图，非贴糊照片）。
-   * examPdf=试卷（U1/U2 各 4 页；U3–U5 原卷各 2 页），examAnswerPdf=可单打答案，examFullPdf=合订。
+   * examPdf=试卷（U1/U2 各 4 页；U3–U5 原卷各 2 页），examAnswerPdf=可单打答案。
    * U1–U2 完整；U3–U5 现有页 + 待补；U6–U9 框架待补原卷。
    */
   units: [
@@ -15,7 +15,6 @@ window.MATH_DESK_DATA = {
     "name": "第一单元 · 大数的认识",
     "short": "大数的认识",
     "examPdf": "printables/u01/04-考前测试/U1_四上_第一单元_大数的认识_试卷.pdf",
-    "examFullPdf": "printables/u01/04-考前测试/U1_四上_第一单元_大数的认识.pdf",
     "examAnswerPdf": "printables/u01/04-考前测试/U1_四上_第一单元_大数的认识_答案.pdf",
     "examComplete": true,
     "examPages": 4,
@@ -27,7 +26,6 @@ window.MATH_DESK_DATA = {
     "name": "第二单元 · 角的度量",
     "short": "角的度量",
     "examPdf": "printables/u02/04-考前测试/U2_四上_第二单元_角的度量_试卷.pdf",
-    "examFullPdf": "printables/u02/04-考前测试/U2_四上_第二单元_角的度量.pdf",
     "examAnswerPdf": "printables/u02/04-考前测试/U2_四上_第二单元_角的度量_答案.pdf",
     "examComplete": true,
     "examPages": 4,
@@ -39,10 +37,9 @@ window.MATH_DESK_DATA = {
     "name": "第三单元 · 三位数乘两位数",
     "short": "三位数乘两位数",
     "examPdf": "printables/u03/04-考前测试/U3_四上_第三单元_三位数乘两位数_试卷.pdf",
-    "examFullPdf": "printables/u03/04-考前测试/U3_四上_第三单元_三位数乘两位数.pdf",
     "examAnswerPdf": "printables/u03/04-考前测试/U3_四上_第三单元_三位数乘两位数_答案.pdf",
-    "examComplete": false,
-    "examPages": 4,
+    "examComplete": true,
+    "examPages": 2,
     "wrongPdf": "printables/u03/05-错题库/u03-错题重练-模板.pdf"
   },
   {
@@ -51,10 +48,9 @@ window.MATH_DESK_DATA = {
     "name": "第四单元 · 数量关系",
     "short": "数量关系",
     "examPdf": "printables/u04/04-考前测试/U4_四上_第四单元_数量关系_试卷.pdf",
-    "examFullPdf": "printables/u04/04-考前测试/U4_四上_第四单元_数量关系.pdf",
     "examAnswerPdf": "printables/u04/04-考前测试/U4_四上_第四单元_数量关系_答案.pdf",
-    "examComplete": false,
-    "examPages": 4,
+    "examComplete": true,
+    "examPages": 2,
     "wrongPdf": "printables/u04/05-错题库/u04-错题重练-模板.pdf"
   },
   {
@@ -63,10 +59,9 @@ window.MATH_DESK_DATA = {
     "name": "第五单元 · 平行四边形和梯形",
     "short": "平行四边形和梯形",
     "examPdf": "printables/u05/04-考前测试/U5_四上_第五单元_平行四边形和梯形_试卷.pdf",
-    "examFullPdf": "printables/u05/04-考前测试/U5_四上_第五单元_平行四边形和梯形.pdf",
     "examAnswerPdf": "printables/u05/04-考前测试/U5_四上_第五单元_平行四边形和梯形_答案.pdf",
-    "examComplete": false,
-    "examPages": 4,
+    "examComplete": true,
+    "examPages": 2,
     "wrongPdf": "printables/u05/05-错题库/u05-错题重练-模板.pdf"
   },
   {
@@ -75,7 +70,6 @@ window.MATH_DESK_DATA = {
     "name": "第六单元 · 除数是两位数的除法",
     "short": "除数是两位数的除法",
     "examPdf": "printables/u06/04-考前测试/U6_四上_第六单元_除数是两位数的除法_试卷.pdf",
-    "examFullPdf": "printables/u06/04-考前测试/U6_四上_第六单元_除数是两位数的除法.pdf",
     "examAnswerPdf": "printables/u06/04-考前测试/U6_四上_第六单元_除数是两位数的除法_答案.pdf",
     "examComplete": false,
     "examPages": 4,
@@ -87,7 +81,6 @@ window.MATH_DESK_DATA = {
     "name": "第七单元 · 条形统计图",
     "short": "条形统计图",
     "examPdf": "printables/u07/04-考前测试/U7_四上_第七单元_条形统计图_试卷.pdf",
-    "examFullPdf": "printables/u07/04-考前测试/U7_四上_第七单元_条形统计图.pdf",
     "examAnswerPdf": "printables/u07/04-考前测试/U7_四上_第七单元_条形统计图_答案.pdf",
     "examComplete": false,
     "examPages": 4,
@@ -99,7 +92,6 @@ window.MATH_DESK_DATA = {
     "name": "第八单元 · 数学广角——优化",
     "short": "数学广角——优化",
     "examPdf": "printables/u08/04-考前测试/U8_四上_第八单元_数学广角——优化_试卷.pdf",
-    "examFullPdf": "printables/u08/04-考前测试/U8_四上_第八单元_数学广角——优化.pdf",
     "examAnswerPdf": "printables/u08/04-考前测试/U8_四上_第八单元_数学广角——优化_答案.pdf",
     "examComplete": false,
     "examPages": 4,
@@ -111,7 +103,6 @@ window.MATH_DESK_DATA = {
     "name": "第九单元 · 总复习",
     "short": "总复习",
     "examPdf": "printables/u09/04-考前测试/U9_四上_第九单元_总复习_试卷.pdf",
-    "examFullPdf": "printables/u09/04-考前测试/U9_四上_第九单元_总复习.pdf",
     "examAnswerPdf": "printables/u09/04-考前测试/U9_四上_第九单元_总复习_答案.pdf",
     "examComplete": false,
     "examPages": 4,
