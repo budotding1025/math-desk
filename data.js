@@ -4,9 +4,9 @@ window.MATH_DESK_DATA = {
   currentUnitId: "u02",
   currentTrack: "daily",
   /**
-   * 考前卷：清晰 Word 重排 PDF（非扫描 JPG）。
-   * 4 页试卷 examPdf + 可单打答案 examAnswerPdf；合订本 examFullPdf。
-   * U1–U2 完整；U3–U5 按已有页重排（后页空白）；U6–U9 为清晰框架待补原卷。
+   * 考前卷：试卷页严格按上传 JPG/pages-hd 原卷排版（不重排放大字图）；
+   * examPdf=4 页试卷，examAnswerPdf=可单打答案，examFullPdf=合订。
+   * U1–U2 完整 4 页源卷；U3–U5 现有源页 + 待补；U6–U9 框架待补原卷。
    */
   units: [
   {
