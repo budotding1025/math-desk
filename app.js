@@ -261,7 +261,26 @@
       .replace(/"/g, "&quot;");
   }
 
-  function itemExtras(text) {
+  function normalizeItem(raw) {
+    if (raw && typeof raw === "object") {
+      return {
+        text: String(raw.text || raw.q || ""),
+        img: raw.img || "",
+        w: raw.w || "88%",
+      };
+    }
+    return { text: String(raw || ""), img: "", w: "88%" };
+  }
+
+  function itemExtras(text, hasFig) {
+    if (hasFig) {
+      if (/画出|作图|在图上|标出/.test(text) && !/画“○”|画“△”/.test(text)) {
+        /* 已有底图时，不再叠空白作图框，留给图上作答 */
+      } else if (/写出|说明|答：|思路|步骤|描述|理由|情形/.test(text)) {
+        return '<div class="write-area" aria-hidden="true"><span></span><span></span></div>';
+      }
+      return "";
+    }
     if (/竖式/.test(text)) return '<div class="calc-box" aria-hidden="true"></div>';
     if (/画出|作图/.test(text)) return '<div class="draw-box" aria-hidden="true"></div>';
     if (/写出|说明|答：|思路|步骤|描述|理由|情形/.test(text)) {
@@ -270,14 +289,31 @@
     return "";
   }
 
-  function itemHtml(text) {
-    const stem = escapeHtml(widenBlanks(text));
-    return '<li class="q-item"><div class="q-stem">' + stem + "</div>" + itemExtras(text) + "</li>";
+  function itemHtml(raw) {
+    const it = normalizeItem(raw);
+    const stem = escapeHtml(widenBlanks(it.text));
+    const fig = it.img
+      ? '<div class="q-fig"><img src="' +
+        escapeHtml(it.img) +
+        '" alt="示意图" style="width:' +
+        escapeHtml(it.w) +
+        ';max-width:100%;height:auto" /></div>'
+      : "";
+    return (
+      '<li class="q-item">' +
+      '<div class="q-stem">' +
+      stem +
+      "</div>" +
+      fig +
+      itemExtras(it.text, !!it.img) +
+      "</li>"
+    );
   }
 
   function blockHtml(section, compact) {
-    /* 合订多项时少取题，保证 11pt + 足额留白仍落在一张 A4 */
-    const max = compact ? 3 : 6;
+    /* 合订多项时少取题；有图时更少，保证一张 A4 */
+    const hasFig = (section.items || []).some((x) => x && typeof x === "object" && x.img);
+    const max = compact ? (hasFig ? 2 : 3) : hasFig ? 4 : 6;
     const lis = trimItems(section.items, max).map(itemHtml).join("");
     return (
       '<div class="block' +
