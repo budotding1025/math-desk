@@ -334,10 +334,10 @@ button { cursor: pointer; border: none; background: none; }
 .sheet {
   width: min(440px, 100%);
   background: var(--card);
-  border-radius: 20px;
+  border-radius: 22px;
   padding: 22px 20px;
   border: 2px solid var(--line);
-  box-shadow: 0 8px 0 rgba(30, 126, 184, 0.08);
+  box-shadow: 0 8px 32px rgba(18, 52, 74, 0.12);
   max-height: 85vh;
   overflow: auto;
 }
@@ -347,14 +347,29 @@ button { cursor: pointer; border: none; background: none; }
   font-size: 1.35rem;
   font-weight: 800;
   font-family: "Noto Serif SC", serif;
-  color: var(--brand-dark);
+  color: var(--brand-deep);
   line-height: 1.35;
 }
-.mod-grid { display: grid; gap: 10px; margin-top: 14px; }
+.sheet .meta {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.help-copy {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.65;
+}
+.help-copy b { color: var(--brand-dark); font-weight: 800; }
+.mod-grid { display: grid; gap: 12px; margin-top: 18px; }
 .mod-btn {
   text-align: left;
-  padding: 18px 16px;
-  border-radius: 14px;
+  padding: 18px;
+  border-radius: 16px;
   border: 2px solid var(--line);
   border-bottom-width: 4px;
   background: #fff;
@@ -366,8 +381,9 @@ button { cursor: pointer; border: none; background: none; }
   display: block;
   font-weight: 600;
   color: var(--muted);
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 0.95rem;
+  line-height: 1.4;
 }
 .mod-btn:active {
   border-bottom-width: 2px;
@@ -537,8 +553,9 @@ button { cursor: pointer; border: none; background: none; }
 }
 .nav-item.is-on { color: var(--brand-deep); }
 .nav-emoji { font-size: 1.45rem; line-height: 1; }
+.nav-label { font-size: 0.88rem; font-weight: 800; }
 
-/* A4 日常练习：对齐考前卷（打印专用，不跟屏幕大字号） */
+/* A4 日常练习：比考前卷略放大一号，印刷更清晰 */
 .print-root { display: none; }
 .sheet-a4 {
   --sheet-ink: #111;
@@ -552,71 +569,71 @@ button { cursor: pointer; border: none; background: none; }
   padding: 14mm 16mm;
   border: 1px solid var(--line);
   font-family: "宋体", SimSun, "Noto Serif SC", serif;
-  font-size: 11pt;
-  line-height: 1.75;
+  font-size: 12pt;
+  line-height: 1.8;
 }
 .sheet-head {
   text-align: center;
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   border-bottom: 1.5pt solid var(--brand-deep);
-  padding-bottom: 6px;
+  padding-bottom: 8px;
 }
 .sheet-brand {
   margin: 0;
   color: var(--brand-deep);
-  font-size: 10pt;
+  font-size: 11pt;
   font-weight: 700;
   font-family: "微软雅黑", "Microsoft YaHei", sans-serif;
 }
 .sheet-title {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   color: var(--brand-dark);
-  font-size: 16pt;
+  font-size: 18pt;
   font-weight: 700;
   font-family: "微软雅黑", "Microsoft YaHei", sans-serif;
   line-height: 1.35;
 }
 .sheet-meta {
-  margin: 4px 0 0;
-  font-size: 10pt;
+  margin: 6px 0 0;
+  font-size: 11pt;
   color: var(--sheet-muted);
   font-family: "宋体", SimSun, serif;
 }
 .sheet-info {
-  margin: 8px 0 12px;
+  margin: 10px 0 14px;
   text-align: center;
-  font-size: 11pt;
+  font-size: 12pt;
   letter-spacing: 0.02em;
 }
 .sheet-foot {
-  margin: 14px 0 0;
-  padding-top: 6px;
+  margin: 16px 0 0;
+  padding-top: 8px;
   border-top: 0.75pt solid #cfe6f4;
-  font-size: 10pt;
+  font-size: 11pt;
   color: var(--sheet-muted);
 }
-.block { margin: 0 0 10pt; }
+.block { margin: 0 0 12pt; }
 .block h3 {
-  margin: 0 0 4pt;
+  margin: 0 0 6pt;
   color: var(--brand-dark);
-  font-size: 12pt;
+  font-size: 13pt;
   font-weight: 700;
   font-family: "微软雅黑", "Microsoft YaHei", sans-serif;
-  border-left: 3pt solid var(--brand);
-  padding-left: 6pt;
+  border-left: 3.5pt solid var(--brand);
+  padding-left: 8pt;
   line-height: 1.4;
 }
 .block .sub {
-  margin: 0 0 6pt;
-  font-size: 9pt;
+  margin: 0 0 8pt;
+  font-size: 10pt;
   color: var(--sheet-muted);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 .block .q { margin: 0; padding: 0; list-style: none; }
 .block .q .q-item {
-  margin: 0 0 7pt;
-  font-size: 11pt;
-  line-height: 1.75;
+  margin: 0 0 9pt;
+  font-size: 12pt;
+  line-height: 1.8;
   page-break-inside: avoid;
   break-inside: avoid;
 }
