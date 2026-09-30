@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
-"""考前测试：按 JPG 内容重排为清晰 Word + PDF（非扫描放大）。"""
+"""
+按源卷 JPG 页断逐页生成清晰 Word→PDF，再合并为 4 页试卷。
+这样不会因 Word 自动分页打乱「第 N 页」结构。
+"""
 from __future__ import annotations
 
+import shutil
 import sys
 from pathlib import Path
 
+import pymupdf
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
 from docx.oxml.ns import qn
@@ -12,9 +17,10 @@ from docx.shared import Cm, Pt, RGBColor
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from theme import BRAND_LINE, RGB_SKY_DEEP, RGB_SKY_DARK  # noqa: E402
+from theme import RGB_SKY_DEEP, RGB_SKY_DARK  # noqa: E402
 
-# 对齐 data.js 单元映射（卷面标题按学校上传练习卷）。
+DIAG = ROOT / "printables" / "_diagrams"
+
 OUT_MAP = {
     "u01": ROOT / "printables" / "u01" / "04-考前测试" / "U1_四上_第一单元_大数的认识",
     "u02": ROOT / "printables" / "u02" / "04-考前测试" / "U2_四上_第二单元_角的度量",
@@ -22,7 +28,6 @@ OUT_MAP = {
     "u04": ROOT / "printables" / "u04" / "04-考前测试" / "U4_四上_第四单元_数量关系",
     "u05": ROOT / "printables" / "u05" / "04-考前测试" / "U5_四上_第五单元_平行四边形和梯形",
 }
-DIAG = ROOT / "printables" / "_diagrams"
 UNIT_DIRS = {
     "u01": "u01-大数的认识",
     "u02": "u02-角的度量",
@@ -39,16 +44,6 @@ ANSWER_MD = {
 }
 
 
-def add_image(doc, path: Path, width_cm: float = 15.5):
-    if not path.exists():
-        add_para(doc, f"【缺图：{path.name}】", size=9, color=RGB_SKY_DEEP)
-        return
-    doc.add_picture(str(path), width=Cm(width_cm))
-    p = doc.paragraphs[-1]
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.paragraph_format.space_after = Pt(6)
-
-
 def set_run_font(run, name="宋体", size=11, bold=False, color=None):
     run.bold = bold
     run.font.size = Pt(size)
@@ -58,7 +53,7 @@ def set_run_font(run, name="宋体", size=11, bold=False, color=None):
         run.font.color.rgb = RGBColor(*color)
 
 
-def add_para(doc, text, *, size=11, bold=False, align=None, space_after=4, space_before=0, color=None, first_line=None):
+def add_para(doc, text, *, size=11, bold=False, align=None, space_after=3, space_before=0, color=None, first_line=None):
     p = doc.add_paragraph()
     if align is not None:
         p.alignment = align
@@ -73,12 +68,23 @@ def add_para(doc, text, *, size=11, bold=False, align=None, space_after=4, space
     return p
 
 
+def add_image(doc, path: Path, width_cm: float = 15.0):
+    if not path.exists():
+        add_para(doc, f"【缺图：{path.name}】", size=9, color=RGB_SKY_DEEP)
+        return
+    doc.add_picture(str(path), width=Cm(width_cm))
+    p = doc.paragraphs[-1]
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_after = Pt(4)
+
+
 def new_doc() -> Document:
     doc = Document()
     sec = doc.sections[0]
     sec.page_width, sec.page_height = Cm(21.0), Cm(29.7)
     sec.left_margin = sec.right_margin = Cm(1.8)
-    sec.top_margin = sec.bottom_margin = Cm(1.5)
+    sec.top_margin = Cm(1.4)
+    sec.bottom_margin = Cm(1.4)
     style = doc.styles["Normal"]
     style.font.name = "宋体"
     style.font.size = Pt(11)
@@ -87,7 +93,6 @@ def new_doc() -> Document:
 
 
 def paper_header(doc, unit_cn: str, minutes="40"):
-    """卷头对齐源 JPG：标题 + 时间 + 姓名栏（无书桌品牌行，避免改变原卷版心）。"""
     add_para(
         doc,
         f"数学 · 四上 · {unit_cn}练习",
@@ -97,70 +102,52 @@ def paper_header(doc, unit_cn: str, minutes="40"):
         color=RGB_SKY_DARK,
         space_after=2,
     )
-    add_para(doc, f"时间：{minutes} 分钟", size=11, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=6)
+    add_para(doc, f"时间：{minutes} 分钟", size=11, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=5)
     add_para(
         doc,
         "学校____________　四年级____班　姓名____________",
         size=11,
         align=WD_ALIGN_PARAGRAPH.CENTER,
-        space_after=10,
+        space_after=8,
     )
 
 
-def pad_to_four_pages(doc: Document, unit_cn: str):
-    """Ensure Word doc has 4 pages for unified print format."""
-    # Count approximate pages via forced breaks we already inserted; add blanks if short.
-    # Callers for partial papers (2 pages) invoke this to append blank answer-space pages.
-    page_break(doc)
-    add_para(doc, "（本页为作答／竖式／作图空白页）", size=10, align=WD_ALIGN_PARAGRAPH.CENTER, color=RGB_SKY_DEEP)
-    add_para(doc, "", space_after=200)
-    footer(doc, unit_cn, 3, 4)
-    page_break(doc)
-    add_para(doc, "（本页为作答／竖式／作图空白页）", size=10, align=WD_ALIGN_PARAGRAPH.CENTER, color=RGB_SKY_DEEP)
-    add_para(doc, "", space_after=200)
-    footer(doc, unit_cn, 4, 4)
-
-
-def footer(doc, unit_cn: str, page: int, total: int):
+def footer(doc, unit_cn: str, page: int, total: int = 4):
     add_para(
         doc,
         f"数学 · 四上 · {unit_cn}　第 {page} 页（共 {total} 页）",
         size=9,
         align=WD_ALIGN_PARAGRAPH.CENTER,
         color=RGB_SKY_DEEP,
+        space_before=8,
         space_after=0,
     )
 
 
 def section(doc, title: str):
-    add_para(doc, title, size=12, bold=True, color=RGB_SKY_DARK, space_after=6, space_before=8)
+    add_para(doc, title, size=12, bold=True, color=RGB_SKY_DARK, space_after=4, space_before=4)
 
 
-def page_break(doc):
-    doc.add_page_break()
-
-
-def docx_to_pdf(docx_path: Path, pdf_path: Path, word=None) -> None:
-    import win32com.client
-
-    own = word is None
-    if own:
-        word = win32com.client.Dispatch("Word.Application")
-        word.Visible = False
-    try:
-        d = word.Documents.Open(str(docx_path.resolve()))
-        d.SaveAs(str(pdf_path.resolve()), FileFormat=17)
-        d.Close(False)
-    finally:
-        if own:
-            word.Quit()
-
-
-# ——— U1 ———
-def build_u01() -> Document:
-    """页断对齐 pages-hd/u01-p01..p04。"""
+def blank_page(unit_cn: str, page: int) -> Document:
     doc = new_doc()
-    # —— 第 1 页：填空 1–7 ——
+    add_para(doc, f"数学 · 四上 · {unit_cn}练习", size=14, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, color=RGB_SKY_DARK)
+    add_para(doc, "【待补】本页源卷 JPG 尚未上传。", size=12, align=WD_ALIGN_PARAGRAPH.CENTER, color=RGB_SKY_DEEP, space_before=40)
+    add_para(doc, "上传后可按原卷排版补全本题页。", size=11, align=WD_ALIGN_PARAGRAPH.CENTER, color=RGB_SKY_DEEP)
+    for i in range(1, 7):
+        add_para(doc, f"{i}. ________________________________________________", space_before=8)
+    footer(doc, unit_cn, page)
+    return doc
+
+
+def docx_to_pdf(docx_path: Path, pdf_path: Path, word) -> None:
+    d = word.Documents.Open(str(docx_path.resolve()))
+    d.SaveAs(str(pdf_path.resolve()), FileFormat=17)
+    d.Close(False)
+
+
+# ——— U1 pages (对齐 u01-p01..p04) ———
+def u01_p1() -> Document:
+    doc = new_doc()
     paper_header(doc, "第一单元")
     section(doc, "一、填空。")
     add_para(doc, "1. 10 个一万是（　　），10 个一百万是（　　），一千万是（　　）个十万，一亿是（　　）个一百万。")
@@ -187,10 +174,12 @@ def build_u01() -> Document:
     add_para(doc, "7. 下面 □ 里可以填哪些数字？把这些数字填在括号里。")
     add_para(doc, "　　8□989≈8 万，□里可以填（　　　　　　）。")
     add_para(doc, "　　10□0074000≈11 亿，□里可以填（　　　　　　）。")
-    footer(doc, "第一单元", 1, 4)
+    footer(doc, "第一单元", 1)
+    return doc
 
-    # —— 第 2 页：填空 8–10 + 选一选 1–3 ——
-    page_break(doc)
+
+def u01_p2() -> Document:
+    doc = new_doc()
     add_para(
         doc,
         "8. 35□8270060 是一个十位数，□里填（　　）时，这个数最接近 35 亿；"
@@ -202,10 +191,10 @@ def build_u01() -> Document:
         "如图，算盘表示的数写作____________________。"
         "请在下面数线上用“↑”标出这个数的大致位置。",
     )
-    add_image(doc, DIAG / "u1_abacus_numline_exact.jpg", 15.5)
+    add_image(doc, DIAG / "u1_abacus_numline_exact.jpg", 14.5)
     add_para(doc, "10. 11 颗珠子，放在不同的数位上表示的数不同。下图表示的是五位数 51023。")
-    add_image(doc, DIAG / "u1_place_value_exact.jpg", 14.5)
-    add_para(doc, "如果用这 11 颗珠子组成一个新的五位数（每个数位上都要有珠子），这个五位数最大是（　　　　）。", space_after=8)
+    add_image(doc, DIAG / "u1_place_value_exact.jpg", 13.5)
+    add_para(doc, "如果用这 11 颗珠子组成一个新的五位数（每个数位上都要有珠子），这个五位数最大是（　　　　）。", space_after=6)
     section(doc, "二、选一选。")
     add_para(doc, "1. 543100 中的“3”表示（　　）。")
     add_para(doc, "　　① 3 个一百　　② 3 个一千　　③ 3 个一万　　④ 3 个十万")
@@ -213,16 +202,18 @@ def build_u01() -> Document:
     add_para(doc, "　　① 406273　　② 4060273　　③ 4062730　　④ 40600273")
     add_para(doc, "3. 在数字 4 和 7 之间添（　　）个 0，可以组成四千万零七。")
     add_para(doc, "　　① 4　　② 5　　③ 6　　④ 7")
-    footer(doc, "第一单元", 2, 4)
+    footer(doc, "第一单元", 2)
+    return doc
 
-    # —— 第 3 页：选一选 4–6 + 三 ——
-    page_break(doc)
+
+def u01_p3() -> Document:
+    doc = new_doc()
     add_para(doc, "4. 数学课上，四位同学用不同的方法表示了 120000，其中不正确的是（　　）。")
-    add_image(doc, DIAG / "u1_mc120000_exact.jpg", 15.5)
+    add_image(doc, DIAG / "u1_mc120000_exact.jpg", 14.5)
     add_para(doc, "5. 一个数的近似数是 476 万，如果原来这个数万位上的数字是 6，那么原数千位上的数字最大是（　　）。")
     add_para(doc, "　　① 4　　② 5　　③ 0　　④ 9")
     add_para(doc, "6. 下面四个数中，（　　）可能是图中 M 点表示的数。")
-    add_image(doc, DIAG / "u1_numline_M_exact.jpg", 13.5)
+    add_image(doc, DIAG / "u1_numline_M_exact.jpg", 12.5)
     add_para(doc, "　　① 63000　　② 65000　　③ 67000　　④ 69000")
     section(doc, "三、按要求完成下面各题。")
     add_para(doc, "1. 连一连。")
@@ -234,24 +225,22 @@ def build_u01() -> Document:
     add_para(doc, "3. 将表格中四大行星到太阳的平均距离按从大到小的顺序排一排。")
     pt = doc.add_table(rows=2, cols=5)
     pt.style = "Table Grid"
-    headers = ["行星", "地球", "木星", "水星", "金星"]
-    dists = ["到太阳的平均距离（千米）", "149600000", "778330000", "57910000", "108200000"]
-    for i, h in enumerate(headers):
+    for i, h in enumerate(["行星", "地球", "木星", "水星", "金星"]):
         pt.rows[0].cells[i].text = h
-    for i, d in enumerate(dists):
+    for i, d in enumerate(["到太阳的平均距离（千米）", "149600000", "778330000", "57910000", "108200000"]):
         pt.rows[1].cells[i].text = d
     add_para(doc, "从大到小：________________ → ________________ → ________________ → ________________")
-    footer(doc, "第一单元", 3, 4)
+    footer(doc, "第一单元", 3)
+    return doc
 
-    # —— 第 4 页：竖式 + 综合 ——
-    page_break(doc)
+
+def u01_p4() -> Document:
+    doc = new_doc()
     section(doc, "四、列竖式计算（带※的题目要验算）。")
     add_para(doc, "1. 76×45＝　　　　　　　　　　　　2. 21.4－7.9＝")
     add_para(doc, "")
     add_para(doc, "")
-    add_para(doc, "")
     add_para(doc, "3. 572÷7＝　　　　　　　　　　　　※4. 843÷5＝")
-    add_para(doc, "")
     add_para(doc, "")
     add_para(doc, "")
     section(doc, "五、根据要求完成下面各题。")
@@ -263,7 +252,7 @@ def build_u01() -> Document:
         "本届冬奥会，中国体育代表团共获得 9 枚金牌、4 枚银牌、2 枚铜牌，共 15 枚奖牌。",
         size=10,
         first_line=Cm(0.74),
-        space_after=6,
+        space_after=5,
     )
     add_para(doc, "1. 将横线上的数按要求写下来。")
     add_para(doc, "　　2267000000 读作（　　　　　　　　　　　　　　）。")
@@ -283,91 +272,97 @@ def build_u01() -> Document:
     )
     add_para(doc, "________________________________________________________________")
     add_para(doc, "________________________________________________________________")
-    footer(doc, "第一单元", 4, 4)
+    footer(doc, "第一单元", 4)
     return doc
 
 
-def build_u02() -> Document:
-    """页断对齐 pages-hd/u02-p01..p04。"""
+# ——— U2 ———
+def u02_p1() -> Document:
     doc = new_doc()
-    # —— 第 1 页：填空 1–6 + 选一选 1 ——
     paper_header(doc, "第二单元")
     section(doc, "一、填空。")
     add_para(doc, "1. 1 周角＝（　　）平角＝（　　）直角。")
     add_para(doc, "　　（　　）角＜（　　）角＜（　　）角＜（　　）角＜周角。")
     add_para(doc, "2. 从早上 6 时到中午 12 时，时针转过（　　）°，相当于 2 个（　　）角的度数。")
     add_para(doc, "3. 下图中箭头所指的位置表示（　　）角，请你用“△”标出周角的位置。")
-    add_image(doc, DIAG / "u2_degree_ray_exact.jpg", 14.0)
+    add_image(doc, DIAG / "u2_degree_ray_exact.jpg", 13.0)
     add_para(doc, "4. 东东在用量角器量角时，错误地把外圈刻度当成内圈刻度，读出的度数是 56°，正确的度数应该是（　　）°。")
     add_para(doc, "5. 如右图，城城用半圆形的材料制作了一个量角器，它被分成了 9 个同样大小的角。如果用这个量角器测量 ∠1 的大小，∠1＝（　　）°。")
-    add_image(doc, DIAG / "u2_9sector_exact.jpg", 8.5)
+    add_image(doc, DIAG / "u2_9sector_exact.jpg", 7.5)
     add_para(
         doc,
         "6. “二十四节气”是古人通过观察天体运行，认知一年中时令、气候、物候等变化规律所形成的知识体系。"
         "古人将太阳周年运动轨迹 360° 划分为 24 等份，每一等份为一个节气，统称“二十四节气”，"
         "每个节气的太阳运动轨迹是（　　）°。",
+        size=10,
     )
     section(doc, "二、选一选。")
     add_para(doc, "1. 两个锐角可以组成的角不可能是（　　）。")
     add_para(doc, "　　① 锐角　　② 直角　　③ 钝角　　④ 平角")
-    footer(doc, "第二单元", 1, 4)
+    footer(doc, "第二单元", 1)
+    return doc
 
-    # —— 第 2 页：选一选 2–5 + 解决问题 1–2 ——
-    page_break(doc)
-    add_para(doc, "2. 如图，汽车经过收费亭时，转杆会慢慢地升起。转杆升起的过程中，与竖杆形成的角的变化情况为（　　）。")
-    add_image(doc, DIAG / "u2_toll_exact.jpg", 14.0)
-    add_para(doc, "　　① 直角→钝角→周角　　② 锐角→直角→钝角　　③ 直角→钝角→平角　　④ 锐角→钝角→直角")
-    add_para(doc, "3. 从人体脊柱健康的角度考虑，座椅靠背角度在 103°～112° 之间。下面各图中符合要求的是（　　）。")
-    add_image(doc, DIAG / "u2_chairs_exact.jpg", 15.0)
-    add_para(doc, "4. 丽丽将一张长方形纸进行折叠（如图），∠1 的度数是（　　）。")
-    add_image(doc, DIAG / "u2_fold_rect_exact.jpg", 8.5)
-    add_para(doc, "　　① 90°　　② 105°　　③ 135°　　④ 150°")
-    add_para(doc, "5. 思思选择了初级道，滑雪道和地面的夹角是 10°，爸爸选择了高级道，滑雪道和地面的夹角大约是（　　）。")
-    add_image(doc, DIAG / "u2_ski_exact.jpg", 12.0)
-    add_para(doc, "　　① 20°　　② 40°　　③ 60°　　④ 80°")
-    section(doc, "三、解决问题。")
-    add_para(doc, "1. 先估计，再量一量图中各角的度数并填空。")
-    add_image(doc, DIAG / "u2_measure_angles_exact.jpg", 13.5)
-    add_para(doc, "　　∠1＝（　　）°　　　　∠2＝（　　）°")
-    add_para(doc, "2. 选择合适的方法在方框中画出下面各角，并标明它们分别是哪一种角。")
-    add_image(doc, DIAG / "u2_draw_boxes_exact.jpg", 14.0)
-    add_para(doc, "　　(1) 50°（　　）角　　　　(2) 150°（　　）角")
-    footer(doc, "第二单元", 2, 4)
 
-    # —— 第 3 页：解决问题 3–5 ——
-    page_break(doc)
+def u02_p2() -> Document:
+    doc = new_doc()
+    add_para(doc, "2. 如图，汽车经过收费亭时，转杆会慢慢地升起。转杆升起的过程中，与竖杆形成的角的变化情况为（　　）。", size=9, space_after=1)
+    add_image(doc, DIAG / "u2_toll_exact.jpg", 9.0)
+    add_para(doc, "　　① 直角→钝角→周角　　② 锐角→直角→钝角　　③ 直角→钝角→平角　　④ 锐角→钝角→直角", size=8, space_after=1)
+    add_para(doc, "3. 从人体脊柱健康的角度考虑，座椅靠背角度在 103°～112° 之间。下面各图中符合要求的是（　　）。", size=9, space_after=1)
+    add_image(doc, DIAG / "u2_chairs_exact.jpg", 10.0)
+    add_para(doc, "4. 丽丽将一张长方形纸进行折叠（如图），∠1 的度数是（　　）。", size=9, space_after=1)
+    add_image(doc, DIAG / "u2_fold_rect_exact.jpg", 5.2)
+    add_para(doc, "　　① 90°　　② 105°　　③ 135°　　④ 150°", size=9, space_after=1)
+    add_para(doc, "5. 思思选择了初级道，滑雪道和地面的夹角是 10°，爸爸选择了高级道，滑雪道和地面的夹角大约是（　　）。", size=9, space_after=1)
+    add_image(doc, DIAG / "u2_ski_exact.jpg", 7.5)
+    add_para(doc, "　　① 20°　　② 40°　　③ 60°　　④ 80°", size=9, space_after=1)
+    add_para(doc, "三、解决问题。", size=11, bold=True, color=RGB_SKY_DARK, space_after=2, space_before=2)
+    add_para(doc, "1. 先估计，再量一量图中各角的度数并填空。", size=9, space_after=1)
+    add_image(doc, DIAG / "u2_measure_angles_exact.jpg", 8.5)
+    add_para(doc, "　　∠1＝（　　）°　　　　∠2＝（　　）°", size=9, space_after=1)
+    add_para(doc, "2. 选择合适的方法在方框中画出下面各角，并标明它们分别是哪一种角。", size=9, space_after=1)
+    add_image(doc, DIAG / "u2_draw_boxes_exact.jpg", 9.5)
+    add_para(doc, "　　(1) 50°（　　）角　　　　(2) 150°（　　）角", size=9, space_after=1)
+    footer(doc, "第二单元", 2)
+    return doc
+
+
+def u02_p3() -> Document:
+    doc = new_doc()
     add_para(doc, "3. 把一张圆形纸连续对折三次。想一想，填一填。")
-    add_image(doc, DIAG / "u2_circle_fold_exact.jpg", 15.5)
+    add_image(doc, DIAG / "u2_circle_fold_exact.jpg", 14.5)
     add_para(doc, "4. 想一想，填一填。")
     add_para(doc, "　　(1) 填出下面三角尺上每个角的度数。")
-    add_image(doc, DIAG / "u2_set_squares_exact.jpg", 14.0)
+    add_image(doc, DIAG / "u2_set_squares_exact.jpg", 13.0)
     add_para(doc, "　　(2) 填出下面三角尺上所标角的度数。")
-    add_image(doc, DIAG / "u2_compose_angles_exact.jpg", 15.0)
+    add_image(doc, DIAG / "u2_compose_angles_exact.jpg", 14.0)
     add_para(doc, "5. 求出下面图中指定角的度数。")
-    add_image(doc, DIAG / "u2_intersect_exact.jpg", 15.5)
-    footer(doc, "第二单元", 3, 4)
+    add_image(doc, DIAG / "u2_intersect_exact.jpg", 14.5)
+    footer(doc, "第二单元", 3)
+    return doc
 
-    # —— 第 4 页：解决问题 6–8 ——
-    page_break(doc)
+
+def u02_p4() -> Document:
+    doc = new_doc()
     add_para(doc, "6. 下面是一个破损的量角器，请你在这个破损的量角器上画一个 75° 的角，并在图中标出角的度数。")
-    add_image(doc, DIAG / "u2_broken_protractor_exact.jpg", 12.0)
+    add_image(doc, DIAG / "u2_broken_protractor_exact.jpg", 11.0)
     add_para(
         doc,
         "7. 如下图，东东想折一个纸飞机，先把一张正方形纸对折产生一条折痕，再将点 B 和点 C 都折到折痕的点 G 上。"
         "已知 ∠1＝60°，那么 ∠2 等于多少度？",
     )
-    add_image(doc, DIAG / "u2_plane_fold_exact.jpg", 14.0)
+    add_image(doc, DIAG / "u2_plane_fold_exact.jpg", 13.0)
     add_para(doc, "8. 放风筝比赛时，选手们所用的风筝线一样长，假如他们都把风筝线放到最长。")
-    add_image(doc, DIAG / "u2_kites_exact.jpg", 14.0)
+    add_image(doc, DIAG / "u2_kites_exact.jpg", 13.0)
     add_para(doc, "　　(1) 如图，量一量，甲的风筝线与地面的夹角是（　　）°，乙的风筝线与地面的夹角是（　　）°。")
     add_para(doc, "　　(2) 风筝飞的高度和风筝线与地面的夹角有什么关系？________________________________")
     add_para(doc, "　　(3) 如果丙的风筝线与地面的夹角为 30°，他的风筝飞得比甲、乙的高吗？请把这个角也在上图中画出来。")
-    footer(doc, "第二单元", 4, 4)
+    footer(doc, "第二单元", 4)
     return doc
 
 
-def build_u03() -> Document:
-    """页断对齐 pages-hd/u03-p01..p02；第 3–4 页原卷缺页空白。"""
+# ——— U3 ———
+def u03_p1() -> Document:
     doc = new_doc()
     paper_header(doc, "第三单元")
     section(doc, "一、填空。")
@@ -391,9 +386,12 @@ def build_u03() -> Document:
     add_para(doc, "　　城城：12×7＋2（　　）")
     add_para(doc, "　　思思：14×6＋14×6（　　）")
     add_para(doc, "　　乐乐：12×10＋12×4（　　）")
-    footer(doc, "第三单元", 1, 4)
+    footer(doc, "第三单元", 1)
+    return doc
 
-    page_break(doc)
+
+def u03_p2() -> Document:
+    doc = new_doc()
     add_para(
         doc,
         "7. 一块长方形绿地，如果长增加 1 m，面积就增加 16 m²；"
@@ -405,7 +403,7 @@ def build_u03() -> Document:
         "1. 我国发射的第一颗人造地球卫星绕地球 1 圈需要 114 分，绕地球 11 圈需要多少分？"
         "乐乐用如图所示的竖式进行了计算，竖式中“←”所指部分表示（　　）。",
     )
-    add_image(doc, DIAG / "u3_114x11_exact.jpg", 6.5)
+    add_image(doc, DIAG / "u3_114x11_exact.jpg", 6.0)
     add_para(doc, "　　① 人造地球卫星绕地球 1 圈需要 114 分")
     add_para(doc, "　　② 人造地球卫星绕地球 1 圈需要 1140 分")
     add_para(doc, "　　③ 人造地球卫星绕地球 10 圈需要 114 分")
@@ -420,19 +418,18 @@ def build_u03() -> Document:
         doc,
         "3. 学校开展“诗歌创作”活动，将优秀作品编辑成一本诗集。每本诗集需要 32 张纸，"
         "给四年级的 298 名同学每人制作一本诗集，需要准备多少张纸？"
-        "同学们想用估算的方法解决这个问题，下面四位同学，（　　）的估算方法能解决这个问题。",
+        "下面四位同学，（　　）的估算方法能解决这个问题。",
     )
     add_para(doc, "　　① 东东：298×32≈8940（把 32 看作 30）")
     add_para(doc, "　　② 城城：298×32≈8700（298≈290，32≈30）")
     add_para(doc, "　　③ 思思：298×32≈9600（298≈300）")
     add_para(doc, "　　④ 乐乐：298×32≈9000（298≈300，32≈30）")
-    footer(doc, "第三单元", 2, 4)
-    pad_to_four_pages(doc, "第三单元")
+    footer(doc, "第三单元", 2)
     return doc
 
 
-def build_u04() -> Document:
-    """页断对齐 pages-hd/u04；第 3–4 页原卷缺页空白。"""
+# ——— U4 ———
+def u04_p1() -> Document:
     doc = new_doc()
     paper_header(doc, "第四单元")
     section(doc, "一、填空。")
@@ -467,11 +464,14 @@ def build_u04() -> Document:
         tb.rows[0].cells[i].text = h
     for i, h in enumerate(["速度", "80 千米/时", "120 千米/时", "230 千米/时", "730 千米/时"]):
         tb.rows[1].cells[i].text = h
-    add_para(doc, "7. 竖式 125×23 中，箭头所指部分积表示（　　）件毛衣的总价，是（　　）元。")
-    add_image(doc, DIAG / "u4_125x23_exact.jpg", 6.5)
-    footer(doc, "第四单元", 1, 4)
+    footer(doc, "第四单元", 1)
+    return doc
 
-    page_break(doc)
+
+def u04_p2() -> Document:
+    doc = new_doc()
+    add_para(doc, "7. 竖式 125×23 中，箭头所指部分积表示（　　）件毛衣的总价，是（　　）元。")
+    add_image(doc, DIAG / "u4_125x23_exact.jpg", 6.0)
     section(doc, "二、选一选。")
     add_para(doc, "1. 复兴号约 350 千米/时，15 分钟行驶多少千米？这个问题求的是（　　）。")
     add_para(doc, "　　① 速度　　② 路程　　③ 时间　　④ 车次")
@@ -480,158 +480,191 @@ def build_u04() -> Document:
     add_para(doc, "3. 下面哪个速度最快？（先统一单位再比较）（　　）。")
     add_para(doc, "　　① 约 20 m/s　　② 约 5 km/min　　③ 约 900 km/h　　④ 约 90 km/h")
     add_para(doc, "4. 骑行 225 米/分，骑 12 分钟。竖式 225×12 中箭头所指（方框内）一步表示（　　）。")
-    add_image(doc, DIAG / "u4_225x12_exact.jpg", 6.5)
+    add_image(doc, DIAG / "u4_225x12_exact.jpg", 6.0)
     add_para(doc, "　　① 1 分钟路程　　② 2 分钟路程　　③ 10 分钟路程　　④ 12 分钟路程")
     add_para(doc, "5. 下列不能用 15×4 解决的是（　　）。")
     add_para(doc, "　　① 4 条丝带，每条 15 m，总长多少？")
     add_para(doc, "　　② 甲有 15 元，乙是甲的 4 倍，乙有多少？")
     add_para(doc, "　　③ 宽 15 m，长是宽的 4 倍，求面积。")
     add_para(doc, "　　④ 鸡蛋原价 20 元/kg，现价 15 元/kg，买 4 kg 多少钱？")
-    footer(doc, "第四单元", 2, 4)
-    pad_to_four_pages(doc, "第四单元")
+    footer(doc, "第四单元", 2)
     return doc
 
 
-def build_u05() -> Document:
-    """页断对齐 pages-hd/u05；第 3–4 页原卷缺页空白。"""
+# ——— U5 ———
+def u05_p1() -> Document:
     doc = new_doc()
     paper_header(doc, "第五单元")
     section(doc, "一、填空。")
-    add_para(doc, "1. 观察下面各图，量一量，并在括号里填上序号。")
-    add_image(doc, DIAG / "u5_lines_exact.jpg", 15.5)
-    add_para(doc, "　　互相垂直的是（　　），互相平行的是（　　）。")
-    add_para(doc, "2. 在梯形下面的括号里画“○”，在平行四边形下面的括号里画“△”。")
-    add_image(doc, DIAG / "u5_shapes_exact.jpg", 15.5)
-    add_para(doc, "3. 从直线外一点到这条直线所画的（　　）最短，它的长度叫做这点到直线的（　　）。")
+    add_para(doc, "1. 观察下面各图，量一量，并在括号里填上序号。", size=10, space_after=2)
+    add_image(doc, DIAG / "u5_lines_exact.jpg", 12.5)
+    add_para(doc, "　　互相垂直的是（　　），互相平行的是（　　）。", size=10, space_after=2)
+    add_para(doc, "2. 在梯形下面的括号里画“○”，在平行四边形下面的括号里画“△”。", size=10, space_after=2)
+    add_image(doc, DIAG / "u5_shapes_exact.jpg", 12.5)
+    add_para(doc, "3. 从直线外一点到这条直线所画的（　　）最短，它的长度叫做这点到直线的（　　）。", size=10, space_after=2)
     add_para(
         doc,
         "4. 只有一组对边平行的四边形是（　　），互相平行的一组对边分别叫做（　　）和（　　），"
         "不平行的一组对边叫做（　　）。",
+        size=10,
+        space_after=2,
     )
-    add_para(doc, "5. 一个梯形中最多有（　　）个直角，这样的梯形叫做（　　）梯形。")
-    add_para(doc, "6. 等腰梯形的两腰（　　），两底角（　　）。")
-    add_para(doc, "7. 一个平行四边形两条相邻的边长度分别是 15 厘米和 18 厘米，这个平行四边形的周长是（　　）厘米。")
-    add_para(doc, "8. 有一组直线（如右图）：")
-    add_image(doc, DIAG / "u5_abcd_exact.jpg", 11.0)
-    add_para(doc, "　　其中直线（　　）和直线（　　）互相垂直；直线（　　）和直线（　　）互相平行。")
-    footer(doc, "第五单元", 1, 4)
-
-    page_break(doc)
-    section(doc, "二、选一选。")
-    add_para(doc, "1. 被遮挡图形露出两边平行，它不可能是（　　）。")
-    add_image(doc, DIAG / "u5_obscured_exact.jpg", 8.5)
-    add_para(doc, "　　① 等腰梯形　　② 平行四边形　　③ 长方形　　④ 直角梯形")
-    add_para(doc, "2. 在等腰梯形中画一条直线，不能把它分成两个完全相同的（　　）。")
-    add_para(doc, "　　① 梯形　　② 平行四边形　　③ 三角形　　④ 长方形")
-    add_para(doc, "3. 两组对边分别平行的四边形是（　　）。")
-    add_para(doc, "　　① 直角梯形　　② 平行四边形　　③ 三角形　　④ 等腰梯形")
-    add_para(doc, "4. 用圆规比较线段 AB、CD 的长短（开口越大越长），结果是（　　）。")
-    add_image(doc, DIAG / "u5_compass_exact.jpg", 12.0)
-    add_para(doc, "　　① CD＞AB　　② CD＝AB　　③ CD＜AB　　④ 无法确定")
-    add_para(doc, "5. 如图，梯形 ABCD 中 AD∥BC，点 D 沿直线向 A 运动直至重合，图形变化顺序是（　　）。")
-    add_image(doc, DIAG / "u5_trap_motion_exact.jpg", 10.5)
-    add_para(doc, "　　① 梯形→平行四边形→梯形　　② 梯形→平行四边形→三角形")
-    add_para(doc, "　　③ 梯形→三角形→平行四边形→梯形　　④ 梯形→平行四边形→梯形→三角形")
-    section(doc, "三、解决问题。")
-    add_para(doc, "1. （1）过角内一点 P，分别向两边作垂线。")
-    add_image(doc, DIAG / "u5_angle_P_exact.jpg", 9.5)
-    add_para(doc, "　　（2）过直线 l 上方点 A、下方点 B，分别作 l 的垂线。这两条垂线的位置关系是（　　）。")
-    add_image(doc, DIAG / "u5_line_AB_exact.jpg", 11.5)
-    footer(doc, "第五单元", 2, 4)
-    pad_to_four_pages(doc, "第五单元")
+    add_para(doc, "5. 一个梯形中最多有（　　）个直角，这样的梯形叫做（　　）梯形。", size=10, space_after=2)
+    add_para(doc, "6. 等腰梯形的两腰（　　），两底角（　　）。", size=10, space_after=2)
+    add_para(doc, "7. 一个平行四边形两条相邻的边长度分别是 15 厘米和 18 厘米，这个平行四边形的周长是（　　）厘米。", size=10, space_after=2)
+    add_para(doc, "8. 有一组直线（如右图）：", size=10, space_after=2)
+    add_image(doc, DIAG / "u5_abcd_exact.jpg", 8.0)
+    add_para(doc, "　　其中直线（　　）和直线（　　）互相垂直；直线（　　）和直线（　　）互相平行。", size=10, space_after=2)
+    footer(doc, "第五单元", 1)
     return doc
 
 
+def u05_p2() -> Document:
+    doc = new_doc()
+    add_para(doc, "二、选一选。", size=11, bold=True, color=RGB_SKY_DARK, space_after=2)
+    add_para(doc, "1. 被遮挡图形露出两边平行，它不可能是（　　）。", size=9, space_after=1)
+    add_image(doc, DIAG / "u5_obscured_exact.jpg", 5.5)
+    add_para(doc, "　　① 等腰梯形　　② 平行四边形　　③ 长方形　　④ 直角梯形", size=9, space_after=1)
+    add_para(doc, "2. 在等腰梯形中画一条直线，不能把它分成两个完全相同的（　　）。", size=9, space_after=1)
+    add_para(doc, "　　① 梯形　　② 平行四边形　　③ 三角形　　④ 长方形", size=9, space_after=1)
+    add_para(doc, "3. 两组对边分别平行的四边形是（　　）。", size=9, space_after=1)
+    add_para(doc, "　　① 直角梯形　　② 平行四边形　　③ 三角形　　④ 等腰梯形", size=9, space_after=1)
+    add_para(doc, "4. 用圆规比较线段 AB、CD 的长短（开口越大越长），结果是（　　）。", size=9, space_after=1)
+    add_image(doc, DIAG / "u5_compass_exact.jpg", 7.5)
+    add_para(doc, "　　① CD＞AB　　② CD＝AB　　③ CD＜AB　　④ 无法确定", size=9, space_after=1)
+    add_para(doc, "5. 如图，梯形 ABCD 中 AD∥BC，点 D 沿直线向 A 运动直至重合，图形变化顺序是（　　）。", size=9, space_after=1)
+    add_image(doc, DIAG / "u5_trap_motion_exact.jpg", 6.8)
+    add_para(doc, "　　① 梯形→平行四边形→梯形　　② 梯形→平行四边形→三角形", size=8, space_after=1)
+    add_para(doc, "　　③ 梯形→三角形→平行四边形→梯形　　④ 梯形→平行四边形→梯形→三角形", size=8, space_after=1)
+    add_para(doc, "三、解决问题。", size=11, bold=True, color=RGB_SKY_DARK, space_after=2, space_before=2)
+    add_para(doc, "1. （1）过角内一点 P，分别向两边作垂线。", size=9, space_after=1)
+    add_image(doc, DIAG / "u5_angle_P_exact.jpg", 5.8)
+    add_para(doc, "　　（2）过直线 l 上方点 A、下方点 B，分别作 l 的垂线。这两条垂线的位置关系是（　　）。", size=9, space_after=1)
+    add_image(doc, DIAG / "u5_line_AB_exact.jpg", 7.0)
+    footer(doc, "第五单元", 2)
+    return doc
 
-BUILDERS = {
-    "u01": build_u01,
-    "u02": build_u02,
-    "u03": build_u03,
-    "u04": build_u04,
-    "u05": build_u05,
+
+PAGE_BUILDERS = {
+    "u01": [u01_p1, u01_p2, u01_p3, u01_p4],
+    "u02": [u02_p1, u02_p2, u02_p3, u02_p4],
+    "u03": [u03_p1, u03_p2, lambda: blank_page("第三单元", 3), lambda: blank_page("第三单元", 4)],
+    "u04": [u04_p1, u04_p2, lambda: blank_page("第四单元", 3), lambda: blank_page("第四单元", 4)],
+    "u05": [u05_p1, u05_p2, lambda: blank_page("第五单元", 3), lambda: blank_page("第五单元", 4)],
 }
 
 
 def build_answer_doc(uid: str, title: str) -> Document:
-    """参考答案：从 markdown 抽正文，清晰可打印一页。"""
     doc = new_doc()
-    add_para(doc, BRAND_LINE, size=10, align=WD_ALIGN_PARAGRAPH.CENTER, color=RGB_SKY_DEEP, space_after=2)
-    add_para(
-        doc,
-        f"{title} · 参考答案",
-        size=15,
-        bold=True,
-        align=WD_ALIGN_PARAGRAPH.CENTER,
-        color=RGB_SKY_DARK,
-        space_after=4,
-    )
-    add_para(doc, "单独答案页 · 可只打印这一页　|　清晰文字版", size=10, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=8)
+    add_para(doc, f"{title} · 参考答案", size=15, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, color=RGB_SKY_DARK, space_after=4)
+    add_para(doc, "单独答案页 · 可只打印这一页", size=10, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=8)
     md = ANSWER_MD.get(uid)
     if md and md.exists():
-        lines = md.read_text(encoding="utf-8").splitlines()
-        for raw in lines:
+        for raw in md.read_text(encoding="utf-8").splitlines():
             line = raw.rstrip()
             if not line or line.startswith(">"):
                 continue
             if line.startswith("#"):
-                add_para(doc, line.lstrip("# ").strip(), size=12, bold=True, color=RGB_SKY_DARK, space_before=6, space_after=4)
+                add_para(doc, line.lstrip("# ").strip(), size=12, bold=True, color=RGB_SKY_DARK, space_before=5, space_after=3)
             else:
-                # strip markdown bold markers lightly
-                text = line.replace("**", "").replace("`", "")
-                add_para(doc, text, size=10, space_after=2)
+                add_para(doc, line.replace("**", "").replace("`", ""), size=10, space_after=2)
     else:
-        add_para(doc, "参考答案待按原卷补全；可先对照日常变式自批。", size=11, color=RGB_SKY_DEEP)
+        add_para(doc, "参考答案待按原卷补全。", size=11, color=RGB_SKY_DEEP)
     return doc
 
 
-def publish_triad(stem: Path, paper_pdf: Path, answer_pdf: Path) -> None:
-    """写出 _试卷 / _答案 / 合订本（试卷在前）。"""
-    import shutil
-    import pymupdf
+def fit_to_one_page(pdf_path: Path) -> Path:
+    """若 Word 导出超过 1 页，缩放到单页 A4，避免丢题。"""
+    doc = pymupdf.open(pdf_path)
+    if doc.page_count <= 1:
+        doc.close()
+        return pdf_path
+    # stitch vertically then scale into one A4
+    a4_w, a4_h = 595, 842
+    margin = 18
+    pixs = [doc[i].get_pixmap(matrix=pymupdf.Matrix(1.5, 1.5), alpha=False) for i in range(doc.page_count)]
+    doc.close()
+    total_h = sum(p.height for p in pixs)
+    max_w = max(p.width for p in pixs)
+    # scale to fit
+    avail_w = a4_w - 2 * margin
+    avail_h = a4_h - 2 * margin
+    scale = min(avail_w / max_w, avail_h / total_h)
+    out = pymupdf.open()
+    page = out.new_page(width=a4_w, height=a4_h)
+    y = margin
+    for pix in pixs:
+        w = pix.width * scale
+        h = pix.height * scale
+        x = margin + (avail_w - w) / 2
+        rect = pymupdf.Rect(x, y, x + w, y + h)
+        page.insert_image(rect, pixmap=pix)
+        y += h
+    out.save(pdf_path, deflate=True, garbage=4)
+    out.close()
+    return pdf_path
 
-    q_out = Path(str(stem) + "_试卷.pdf")
-    a_out = Path(str(stem) + "_答案.pdf")
-    full_out = Path(str(stem) + ".pdf")
-    shutil.copy2(answer_pdf, a_out)
 
-    src = pymupdf.open(paper_pdf)
-    qdoc = pymupdf.open()
-    take = min(src.page_count, 4)
-    qdoc.insert_pdf(src, from_page=0, to_page=take - 1)
-    src.close()
-    while qdoc.page_count < 4:
-        page = qdoc.new_page(width=595, height=842)
-        page.insert_text((72, 72), "（作答空白页）", fontsize=12, color=(0.12, 0.49, 0.72))
-    qdoc.save(q_out, deflate=True, garbage=4)
-
+def merge_pdfs(paths: list[Path], out: Path) -> None:
     full = pymupdf.open()
-    full.insert_pdf(qdoc)
-    adoc = pymupdf.open(a_out)
-    full.insert_pdf(adoc)
-    adoc.close()
-    qdoc.close()
-    full.save(full_out, deflate=True, garbage=4)
+    for p in paths:
+        fit_to_one_page(p)
+        src = pymupdf.open(p)
+        full.insert_pdf(src, from_page=0, to_page=0)
+        src.close()
+    full.save(out, deflate=True, garbage=4)
     full.close()
-    print("  triad", q_out.name, a_out.name, full_out.name)
 
 
 def main() -> int:
-    import shutil
     import win32com.client
 
     word = win32com.client.Dispatch("Word.Application")
     word.Visible = False
+    tmp = ROOT / "_tmp" / "exam_pages"
+    tmp.mkdir(parents=True, exist_ok=True)
     try:
-        for key, builder in BUILDERS.items():
-            stem = OUT_MAP[key]
+        for uid, builders in PAGE_BUILDERS.items():
+            stem = OUT_MAP[uid]
             stem.parent.mkdir(parents=True, exist_ok=True)
-            docx_path = Path(str(stem) + ".docx")
-            paper_tmp = Path(str(stem) + "_clean_paper.pdf")
-            ans_docx = Path(str(stem) + "_答案.docx")
-            ans_tmp = Path(str(stem) + "_clean_answer.pdf")
-            print("==", key, docx_path.name)
-            builder().save(str(docx_path))
-            docx_to_pdf(docx_path, paper_tmp, word=word)
+            print("==", uid)
+            page_pdfs = []
+            # also stitch one editable multi-section docx for archive
+            master = new_doc()
+            # clear default empty para later by rebuilding from pages
+            for i, builder in enumerate(builders, 1):
+                doc = builder()
+                docx_path = tmp / f"{uid}_p{i}.docx"
+                pdf_path = tmp / f"{uid}_p{i}.pdf"
+                doc.save(str(docx_path))
+                docx_to_pdf(docx_path, pdf_path, word)
+                # if Word spilled to >1 page, still only take page 1 in merge
+                page_pdfs.append(pdf_path)
+                print(f"  page {i}", pdf_path.stat().st_size)
+
+            paper_pdf = Path(str(stem) + "_试卷.pdf")
+            merge_pdfs(page_pdfs, paper_pdf)
+
+            # combined editable docx: concatenate page builders with breaks for editing
+            big = builders[0]()
+            for builder in builders[1:]:
+                big.add_page_break()
+                # append content by XML is hard; save first page only + note
+            # simpler: save first page docx as stem.docx and also keep page pack
+            builders[0]().save(str(stem) + ".docx")
+            # overwrite stem.docx with a note-free first page is incomplete;
+            # rebuild by sequential copy using Word insert — skip, store page pack instead
+            # Create full docx via Word by inserting page breaks and content from each page file
+            full_docx = Path(str(stem) + ".docx")
+            first = word.Documents.Open(str((tmp / f"{uid}_p1.docx").resolve()))
+            for i in range(2, 5):
+                first.Paragraphs.Last.Range.InsertBreak(7)  # wdPageBreak
+                sub = word.Documents.Open(str((tmp / f"{uid}_p{i}.docx").resolve()))
+                sub.Content.Copy()
+                first.Paragraphs.Last.Range.Paste()
+                sub.Close(False)
+            first.SaveAs(str(full_docx.resolve()))
+            first.Close(False)
 
             title_cn = {
                 "u01": "第一单元 · 大数的认识",
@@ -639,15 +672,24 @@ def main() -> int:
                 "u03": "第三单元 · 三位数乘两位数",
                 "u04": "第四单元 · 数量关系",
                 "u05": "第五单元 · 平行四边形和梯形",
-            }[key]
-            build_answer_doc(key, title_cn).save(str(ans_docx))
-            docx_to_pdf(ans_docx, ans_tmp, word=word)
-            publish_triad(stem, paper_tmp, ans_tmp)
-            # cleanup temps
-            for p in (paper_tmp, ans_tmp):
-                if p.exists():
-                    p.unlink()
-            unit_name = UNIT_DIRS.get(key)
+            }[uid]
+            ans_docx = Path(str(stem) + "_答案.docx")
+            ans_pdf = Path(str(stem) + "_答案.pdf")
+            build_answer_doc(uid, title_cn).save(str(ans_docx))
+            docx_to_pdf(ans_docx, ans_pdf, word)
+
+            full_pdf = Path(str(stem) + ".pdf")
+            combo = pymupdf.open()
+            q = pymupdf.open(paper_pdf)
+            combo.insert_pdf(q)
+            q.close()
+            a = pymupdf.open(ans_pdf)
+            combo.insert_pdf(a)
+            a.close()
+            combo.save(full_pdf, deflate=True, garbage=4)
+            combo.close()
+
+            unit_name = UNIT_DIRS.get(uid)
             if unit_name:
                 orig = ROOT / "units" / unit_name / "04-考前测试" / "original"
                 orig.mkdir(parents=True, exist_ok=True)
@@ -660,8 +702,11 @@ def main() -> int:
                 for suffix in (".docx", ".pdf", "_试卷.pdf", "_答案.pdf"):
                     src = Path(str(stem) + suffix)
                     if src.exists():
-                        shutil.copy2(src, legacy / src.name)
-            print("  ok paper", Path(str(stem) + "_试卷.pdf").stat().st_size)
+                        try:
+                            shutil.copy2(src, legacy / src.name)
+                        except OSError as e:
+                            print("  legacy skip", src.name, e)
+            print("  ok", paper_pdf.name, paper_pdf.stat().st_size)
     finally:
         word.Quit()
     print("done")
