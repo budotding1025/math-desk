@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>数学书桌 · Math Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./theme.css?v=2" />
+  <script src="./data-daily.js?v=1"></script>
+</head>
+<body>
+  <div class="app no-print">
+    <header class="top">
+      <div>
+        <p class="tag">已上线 · 天蓝主色</p>
+        <h1 class="brand">数学书桌</h1>
+      </div>
+      <a class="link-out" href="https://budotding1025.github.io/math-desk/">线上页</a>
+    </header>
+
+    <p class="lead">
+      <b>日常练习</b>选 ①计算 / ②重难点 / ③应用题（可多选）→ 排成 A4 → 打印或另存 PDF。<br />
+      选 1 项：约 <b>15 分钟</b>；选多项：每块仍按约 15 分钟，可分次练（多页 A4）。
+      考前测试固定 <b>30–40 分钟</b>。
+    </p>
+
+    <section class="card composer">
+      <h2>日常练习 · 组卷打印</h2>
+      <div class="row">
+        <label>单元
+          <select id="unitSelect"></select>
+        </label>
+      </div>
+      <div class="checks" id="trackChecks">
+        <label class="check"><input type="checkbox" value="calc" checked /> ① 日常计算</label>
+        <label class="check"><input type="checkbox" value="key" /> ② 重难点题型</label>
+        <label class="check"><input type="checkbox" value="app" /> ③ 应用题</label>
+      </div>
+      <div class="checks" id="layoutMode">
+        <label class="check"><input type="radio" name="layout" value="combine" checked /> 合订一张 A4（多项合计约 15 分钟）</label>
+        <label class="check"><input type="radio" name="layout" value="split" /> 分项分页（每项约 15 分钟）</label>
+      </div>
+      <p class="hint" id="selectHint">已选 1 项 · 1 页 A4 · 约 15 分钟</p>
+      <div class="actions">
+        <button type="button" class="btn primary" id="btnBuild">生成 A4 预览</button>
+        <button type="button" class="btn" id="btnPrint" disabled>打印 / 另存 PDF</button>
+        <button type="button" class="btn" id="btnDownload" disabled>下载 HTML</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>考前测试 · 30–40 分钟</h2>
+      <div class="list" id="examList"></div>
+    </section>
+
+    <section class="card">
+      <h2>错题库模板</h2>
+      <div class="list" id="wrongList"></div>
+    </section>
+
+    <p class="note">本地：双击 <code>打开数学书桌.bat</code>。线上：与语文书桌相同，GitHub Pages。</p>
+  </div>
+
+  <!-- A4 print stack -->
+  <div id="printRoot" class="print-root" aria-live="polite"></div>
+
+  <script src="./app.js?v=2"></script>
+</body>
+</html>

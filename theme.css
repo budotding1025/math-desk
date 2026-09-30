@@ -1,0 +1,112 @@
+:root {
+  --sky: #4ba3d9;
+  --sky-deep: #1e7eb8;
+  --sky-dark: #0f5f8a;
+  --sky-soft: #e8f4fc;
+  --ink: #12344a;
+  --muted: #5a7a8c;
+  --line: rgba(30, 126, 184, 0.2);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Noto Sans SC", "DM Sans", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(1100px 520px at 8% -8%, #b9e0f5 0%, transparent 55%),
+    linear-gradient(180deg, var(--sky-soft), #fff 42%);
+  min-height: 100vh;
+}
+
+.app { max-width: 920px; margin: 0 auto; padding: 36px 20px 80px; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.brand { margin: 4px 0 0; font-size: clamp(2rem, 5vw, 2.6rem); color: var(--sky-deep); }
+.tag {
+  display: inline-block; margin: 0; color: var(--sky-dark);
+  background: rgba(75, 163, 217, 0.15); border: 1px solid var(--line);
+  border-radius: 999px; padding: 3px 10px; font-size: 0.82rem;
+}
+.link-out { color: var(--sky-deep); font-weight: 700; text-decoration: none; margin-top: 8px; }
+.lead { color: var(--muted); line-height: 1.65; margin: 16px 0 24px; }
+.lead b { color: var(--sky-dark); }
+
+.card {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  margin-bottom: 16px;
+}
+.card h2 { margin: 0 0 12px; font-size: 1.1rem; color: var(--sky-dark); }
+.row label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; color: var(--sky-dark); }
+select {
+  font: inherit; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--line); background: #fff; color: var(--ink);
+}
+.checks { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 8px; }
+.check {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line);
+  background: #fff; cursor: pointer; font-weight: 600;
+}
+.check:has(input:checked) { border-color: var(--sky); background: rgba(75, 163, 217, 0.12); }
+.hint { color: var(--muted); font-size: 0.9rem; margin: 0 0 12px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn {
+  font: inherit; font-weight: 700; border-radius: 12px; border: 1px solid var(--line);
+  background: #fff; color: var(--sky-dark); padding: 10px 14px; cursor: pointer;
+}
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.primary { background: var(--sky-deep); color: #fff; border-color: var(--sky-deep); }
+.btn:hover:not(:disabled) { filter: brightness(1.03); }
+
+.list { display: grid; gap: 8px; }
+.list a {
+  display: flex; justify-content: space-between; gap: 10px;
+  text-decoration: none; color: var(--ink); background: #fff;
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+}
+.list a:hover { border-color: var(--sky); }
+.list .meta { color: var(--muted); font-size: 0.82rem; }
+.note { color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
+.note code { background: rgba(75, 163, 217, 0.12); padding: 1px 6px; border-radius: 6px; }
+
+/* Screen preview of A4 */
+.print-root { padding: 0 20px 60px; }
+.sheet-a4 {
+  width: min(210mm, 100%);
+  min-height: 297mm;
+  margin: 18px auto;
+  background: #fff;
+  color: #12344a;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 30px rgba(15, 95, 138, 0.08);
+  padding: 14mm 14mm 12mm;
+}
+.sheet-head { text-align: center; margin-bottom: 10px; border-bottom: 2px solid var(--sky-deep); padding-bottom: 8px; }
+.sheet-brand { color: var(--sky-deep); font-weight: 700; font-size: 1.15rem; margin: 0; }
+.sheet-title { margin: 4px 0 0; font-size: 1.05rem; color: var(--sky-dark); }
+.sheet-meta { margin: 4px 0 0; font-size: 0.78rem; color: var(--muted); }
+.sheet-info { margin: 8px 0 12px; font-size: 0.85rem; }
+.block { margin-bottom: 12px; break-inside: avoid; }
+.block h3 {
+  margin: 0 0 6px; font-size: 0.98rem; color: var(--sky-dark);
+  border-left: 3px solid var(--sky); padding-left: 8px;
+}
+.block .sub { margin: 0 0 6px; font-size: 0.78rem; color: var(--muted); }
+.block ol, .block .q { margin: 0; padding-left: 0; list-style: none; }
+.block .q li { margin: 0 0 5px; font-size: 0.88rem; line-height: 1.45; }
+.page-break { break-before: page; page-break-before: always; }
+
+@media print {
+  body { background: #fff; }
+  .no-print { display: none !important; }
+  .print-root { padding: 0; }
+  .sheet-a4 {
+    width: auto; min-height: auto; margin: 0; border: none; box-shadow: none;
+    padding: 0;
+  }
+  .page-break { break-before: page; page-break-before: always; }
+  @page { size: A4; margin: 12mm; }
+}
