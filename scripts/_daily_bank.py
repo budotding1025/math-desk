@@ -309,12 +309,12 @@ UNITS = [
                 Q(
                     f"3. 被遮挡图形露出两边平行，它不可能是 {S}。"
                     "　①等腰梯形　②平行四边形　③长方形　④直角梯形",
-                    "u5_obscured_hd.jpg",
+                    "u5_obscured_exact.jpg",
                     "50%",
                 ),
                 Q(
                     f"4. 如图，写出互相垂直与互相平行的直线。垂直：{U}　平行：{U}",
-                    "u5_abcd_hd.jpg",
+                    "u5_abcd_exact.jpg",
                     "55%",
                 ),
             ],

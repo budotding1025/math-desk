@@ -282,12 +282,12 @@ window.MATH_DAILY = [
         },
         {
           "text": "3. 被遮挡图形露出两边平行，它不可能是 （　　）。　①等腰梯形　②平行四边形　③长方形　④直角梯形",
-          "img": "printables/_diagrams/u5_obscured_hd.jpg",
+          "img": "printables/_diagrams/u5_obscured_exact.jpg",
           "w": "50%"
         },
         {
           "text": "4. 如图，写出互相垂直与互相平行的直线。垂直：______________　平行：______________",
-          "img": "printables/_diagrams/u5_abcd_hd.jpg",
+          "img": "printables/_diagrams/u5_abcd_exact.jpg",
           "w": "55%"
         }
       ]
