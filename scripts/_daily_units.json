@@ -1,4 +1,4 @@
-window.MATH_DAILY = [
+[
   {
     "id": "u01",
     "title": "第一单元 · 大数的认识",
@@ -341,4 +341,4 @@ window.MATH_DAILY = [
       ]
     }
   }
-];
+]

@@ -51,7 +51,9 @@
         unitTitle: u.name,
         unitNo: u.no,
         title: "考前测试",
-        kind: (u.examComplete ? "完整卷" : "部分卷") + " · 30–40 分钟",
+        kind: (u.examComplete ? "完整卷" : "部分卷") +
+          (u.examPages ? " · " + u.examPages + " 页 JPG" : " · 待补") +
+          " · 30–40 分钟",
         lessonLabel: "第二课",
         unit: u,
       });

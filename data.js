@@ -1,44 +1,60 @@
 window.MATH_DESK_DATA = {
   book: "四年级上册 · 人教版",
   brand: "数学书桌",
-  /** 当前进度：第二单元 · 日常练习（教材：公顷和平方千米） */
+  /** 当前进度：第二单元 · 日常练习（上传卷：角的度量） */
   currentUnitId: "u02",
   currentTrack: "daily",
+  /**
+   * 考前卷对齐上传 JPG：1–N 页为卷面，另附答案页（examAnswerPdf 可单打）。
+   * 教材另有「公顷和平方千米」，练习卷未单列，见 printables/extra-公顷和平方千米。
+   */
   units: [
     {
       id: "u01",
       no: 1,
       name: "第一单元 · 大数的认识",
       short: "大数的认识",
-      examPdf: "printables/u01/04-考前测试/U1_四上_第一单元_大数的认识.pdf",
+      examPdf: "printables/u01/04-考前测试/U1_四上_第一单元_大数的认识_试卷.pdf",
+      examFullPdf: "printables/u01/04-考前测试/U1_四上_第一单元_大数的认识.pdf",
+      examAnswerPdf: "printables/u01/04-考前测试/U1_四上_第一单元_大数的认识_答案.pdf",
       examComplete: true,
+      examPages: 4,
       wrongPdf: "printables/u01/05-错题库/u01-错题重练-模板.pdf",
     },
     {
       id: "u02",
       no: 2,
-      name: "第二单元 · 公顷和平方千米",
-      short: "公顷和平方千米",
-      examPdf: "printables/u02/04-考前测试/U2_四上_第二单元_公顷和平方千米_待补.pdf",
-      examComplete: false,
+      name: "第二单元 · 角的度量",
+      short: "角的度量",
+      examPdf: "printables/u02/04-考前测试/U2_四上_第二单元_角的度量_试卷.pdf",
+      examFullPdf: "printables/u02/04-考前测试/U2_四上_第二单元_角的度量.pdf",
+      examAnswerPdf: "printables/u02/04-考前测试/U2_四上_第二单元_角的度量_答案.pdf",
+      examComplete: true,
+      examPages: 4,
       wrongPdf: "printables/u02/05-错题库/u02-错题重练-模板.pdf",
     },
     {
       id: "u03",
       no: 3,
-      name: "第三单元 · 角的度量",
-      short: "角的度量",
-      examPdf: "printables/u03/04-考前测试/U3_四上_第三单元_角的度量.pdf",
-      examComplete: true,
+      name: "第三单元 · 三位数乘两位数",
+      short: "三位数乘两位数",
+      examPdf: "printables/u03/04-考前测试/U3_四上_第三单元_三位数乘两位数_部分_试卷.pdf",
+      examFullPdf: "printables/u03/04-考前测试/U3_四上_第三单元_三位数乘两位数_部分.pdf",
+      examAnswerPdf: "printables/u03/04-考前测试/U3_四上_第三单元_三位数乘两位数_部分_答案.pdf",
+      examComplete: false,
+      examPages: 2,
       wrongPdf: "printables/u03/05-错题库/u03-错题重练-模板.pdf",
     },
     {
       id: "u04",
       no: 4,
-      name: "第四单元 · 三位数乘两位数",
-      short: "三位数乘两位数",
-      examPdf: "printables/u04/04-考前测试/U4_四上_第四单元_三位数乘两位数_部分.pdf",
+      name: "第四单元 · 数量关系",
+      short: "数量关系",
+      examPdf: "printables/u04/04-考前测试/U4_四上_第四单元_数量关系_部分_试卷.pdf",
+      examFullPdf: "printables/u04/04-考前测试/U4_四上_第四单元_数量关系_部分.pdf",
+      examAnswerPdf: "printables/u04/04-考前测试/U4_四上_第四单元_数量关系_部分_答案.pdf",
       examComplete: false,
+      examPages: 2,
       wrongPdf: "printables/u04/05-错题库/u04-错题重练-模板.pdf",
     },
     {
@@ -46,8 +62,11 @@ window.MATH_DESK_DATA = {
       no: 5,
       name: "第五单元 · 平行四边形和梯形",
       short: "平行四边形和梯形",
-      examPdf: "printables/u05/04-考前测试/U5_四上_第五单元_平行四边形和梯形_部分.pdf",
+      examPdf: "printables/u05/04-考前测试/U5_四上_第五单元_平行四边形和梯形_部分_试卷.pdf",
+      examFullPdf: "printables/u05/04-考前测试/U5_四上_第五单元_平行四边形和梯形_部分.pdf",
+      examAnswerPdf: "printables/u05/04-考前测试/U5_四上_第五单元_平行四边形和梯形_部分_答案.pdf",
       examComplete: false,
+      examPages: 2,
       wrongPdf: "printables/u05/05-错题库/u05-错题重练-模板.pdf",
     },
     {
@@ -56,7 +75,9 @@ window.MATH_DESK_DATA = {
       name: "第六单元 · 除数是两位数的除法",
       short: "除数是两位数的除法",
       examPdf: "printables/u06/04-考前测试/U6_四上_第六单元_除数是两位数的除法_待补.pdf",
+      examAnswerPdf: "",
       examComplete: false,
+      examPages: 0,
       wrongPdf: "printables/u06/05-错题库/u06-错题重练-模板.pdf",
     },
     {
@@ -65,7 +86,9 @@ window.MATH_DESK_DATA = {
       name: "第七单元 · 条形统计图",
       short: "条形统计图",
       examPdf: "printables/u07/04-考前测试/U7_四上_第七单元_条形统计图_待补.pdf",
+      examAnswerPdf: "",
       examComplete: false,
+      examPages: 0,
       wrongPdf: "printables/u07/05-错题库/u07-错题重练-模板.pdf",
     },
     {
@@ -74,7 +97,9 @@ window.MATH_DESK_DATA = {
       name: "第八单元 · 数学广角——优化",
       short: "数学广角——优化",
       examPdf: "printables/u08/04-考前测试/U8_四上_第八单元_数学广角——优化_待补.pdf",
+      examAnswerPdf: "",
       examComplete: false,
+      examPages: 0,
       wrongPdf: "printables/u08/05-错题库/u08-错题重练-模板.pdf",
     },
     {
@@ -83,10 +108,10 @@ window.MATH_DESK_DATA = {
       name: "第九单元 · 总复习",
       short: "总复习",
       examPdf: "printables/u09/04-考前测试/U9_四上_第九单元_总复习_待补.pdf",
+      examAnswerPdf: "",
       examComplete: false,
+      examPages: 0,
       wrongPdf: "printables/u09/05-错题库/u09-错题重练-模板.pdf",
     },
   ],
 };
-
-/* keep daily bank for A4 composer */

@@ -111,8 +111,11 @@
         P.markDone(node.id);
         renderHome();
       };
-      secondary.textContent = "去组卷";
-      secondary.onclick = () => openCompose(node.unitId);
+      secondary.textContent = node.unit.examAnswerPdf ? "打印答案" : "去组卷";
+      secondary.onclick = () => {
+        if (node.unit.examAnswerPdf) openPdf(node.unit.examAnswerPdf);
+        else openCompose(node.unitId);
+      };
     }
   }
 
@@ -182,9 +185,11 @@
       const a = document.createElement("button");
       a.type = "button";
       a.className = "mod-btn";
+      const pages = node.unit.examPages || 0;
       a.innerHTML =
-        "打开考前测试 PDF<small>" +
-        (node.unit.examComplete ? "完整卷" : "部分卷") +
+        "打开考前测试（试卷）<small>" +
+        (node.unit.examComplete ? "完整 " : "部分 ") +
+        (pages ? pages + " 页 · 对齐上传 JPG" : "待补") +
         " · 30–40 分钟</small>";
       a.onclick = () => {
         openPdf(node.unit.examPdf);
@@ -192,6 +197,28 @@
         $("pathNodeOverlay").classList.add("hidden");
       };
       grid.appendChild(a);
+      if (node.unit.examAnswerPdf) {
+        const ans = document.createElement("button");
+        ans.type = "button";
+        ans.className = "mod-btn";
+        ans.innerHTML = "打印参考答案<small>单独答案页 · 也可打开「试卷+答案」合订本</small>";
+        ans.onclick = () => {
+          openPdf(node.unit.examAnswerPdf);
+          $("pathNodeOverlay").classList.add("hidden");
+        };
+        grid.appendChild(ans);
+      }
+      if (node.unit.examFullPdf) {
+        const full = document.createElement("button");
+        full.type = "button";
+        full.className = "mod-btn";
+        full.innerHTML = "打开合订本（试卷+答案）<small>卷面后附答案页</small>";
+        full.onclick = () => {
+          openPdf(node.unit.examFullPdf);
+          $("pathNodeOverlay").classList.add("hidden");
+        };
+        grid.appendChild(full);
+      }
     }
 
     const toRec = document.createElement("button");
