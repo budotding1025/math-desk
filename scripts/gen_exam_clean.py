@@ -21,6 +21,17 @@ OUT_MAP = {
     "u04": ROOT / "printables" / "u04" / "04-考前测试" / "U4_四上_第四单元_数量关系_部分",
     "u05": ROOT / "printables" / "u05" / "04-考前测试" / "U5_四上_第五单元_平行四边形和梯形_部分",
 }
+DIAG = ROOT / "printables" / "_diagrams"
+
+
+def add_image(doc, path: Path, width_cm: float = 15.5):
+    if not path.exists():
+        add_para(doc, f"【缺图：{path.name}】", size=9, color=RGB_SKY_DEEP)
+        return
+    doc.add_picture(str(path), width=Cm(width_cm))
+    p = doc.paragraphs[-1]
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_after = Pt(6)
 
 
 def set_run_font(run, name="宋体", size=11, bold=False, color=None):
@@ -149,23 +160,15 @@ def build_u01() -> Document:
     )
     add_para(
         doc,
-        "9. 算盘是我国古代的伟大发明。如图（原卷算盘图：十万位上珠为 5，万位下珠为 3），"
-        "算盘表示的数写作______________。请在下面数线上用“↑”标出这个数的大致位置。",
+        "9. 算盘是我国古代的伟大发明。如图，算盘表示的数写作______________。"
+        "请在下面数线上用“↑”标出这个数的大致位置。",
     )
-    add_para(doc, "　　50万　|--------|--------|--------|--------|--------|--------|--------|--------|--------|--------|　60万", size=9)
-    add_para(doc, "　　　　　　　　　　　　　（在约 53 万处标 ↑）", size=9, color=RGB_SKY_DEEP)
+    add_image(doc, DIAG / "u1_abacus_numline_exact.jpg", 16.0)
     add_para(
         doc,
-        "10. 11 颗珠子，放在不同数位上表示的数不同。下表表示五位数 51023。",
+        "10. 11 颗珠子，放在不同数位上表示的数不同。下图表示五位数 51023。",
     )
-    # place value table
-    t = doc.add_table(rows=2, cols=5)
-    t.style = "Table Grid"
-    heads = ["万位", "千位", "百位", "十位", "个位"]
-    vals = ["●●●●●", "●", "（空）", "●●", "●●●"]
-    for i, h in enumerate(heads):
-        t.rows[0].cells[i].text = h
-        t.rows[1].cells[i].text = vals[i]
+    add_image(doc, DIAG / "u1_place_value_exact.jpg", 15.0)
     add_para(doc, "如果用这 11 颗珠子组成一个新的五位数（每个数位上都要有珠子），这个五位数最大是（　　　　）。", space_after=8)
 
     section(doc, "二、选一选。")
@@ -180,14 +183,11 @@ def build_u01() -> Document:
     page_break(doc)
     section(doc, "二、选一选。（续）")
     add_para(doc, "4. 四位同学用不同方法表示 120000，其中不正确的是（　　）。")
-    add_para(doc, "　　① 计数器：十万位拨 1，万位拨 2（表示 120000）")
-    add_para(doc, "　　② 用小正方形表示，每格表示 1000，画了 120 格")
-    add_para(doc, "　　③ 数线：10万——20万，箭头指在正中间（约 15万）")
-    add_para(doc, "　　④ 1×100000＋2×10000")
+    add_image(doc, DIAG / "u1_mc120000_exact.jpg", 15.5)
     add_para(doc, "5. 一个数的近似数是 476 万。如果原来这个数万位上的数字是 6，那么原来千位上的数字最大是（　　）。")
     add_para(doc, "　　① 4　　② 5　　③ 0　　④ 9")
     add_para(doc, "6. 下面四个数中，（　　）可能是图中 M 点表示的数。")
-    add_para(doc, "　　数线：50000——60000——70000，M 在 60000 与 70000 之间且靠近 60000 一侧约三分之一处。")
+    add_image(doc, DIAG / "u1_numline_M_exact.jpg", 14.0)
     add_para(doc, "　　① 63000　　② 65000　　③ 67000　　④ 69000")
 
     section(doc, "三、按要求完成下面各题。")
@@ -387,21 +387,26 @@ def build_u04() -> Document:
 def build_u05() -> Document:
     doc = new_doc()
     paper_header(doc, "第五单元")
-    add_para(doc, "【说明】原卷扫描仅有第 1–2 页，本卷按已有内容清晰重排；图题请对照原卷示意图作答。", size=9, color=RGB_SKY_DEEP)
+    add_para(doc, "【说明】原卷扫描仅有第 1–2 页，本卷按已有内容清晰重排；图题已用高清示意图补全。", size=9, color=RGB_SKY_DEEP)
     section(doc, "一、填空。")
-    add_para(doc, "1. 观察五组直线（原卷图①～⑤）：互相垂直的是（　　）；互相平行的是（　　）。")
-    add_para(doc, "2. 在梯形下面画“○”，在平行四边形下面画“△”。（长方形、正方形、菱形也属平行四边形）")
+    add_para(doc, "1. 观察下面各图，互相垂直的是（　　），互相平行的是（　　）。")
+    add_image(doc, DIAG / "u5_lines_exact.jpg", 16.0)
+    # also keep AI-refined version note - prefer exact
+    add_para(doc, "2. 在梯形下面的括号里画“○”，在平行四边形下面的括号里画“△”。")
+    add_image(doc, DIAG / "u5_shapes_exact.jpg", 16.0)
     add_para(doc, "3. 从直线外一点到这条直线的（　　）线段最短，它的长度叫做点到直线的（　　）。")
     add_para(doc, "4. 只有一组对边平行的四边形叫做（　　）。平行的一组对边分别叫做（　　）和（　　），不平行的两边叫做（　　）。")
     add_para(doc, "5. 梯形最多有（　　）个直角，这样的梯形叫做（　　）梯形。")
     add_para(doc, "6. 等腰梯形的两腰（　　），同一底上的两个底角（　　）。")
     add_para(doc, "7. 平行四边形的邻边分别是 15 cm 和 18 cm，它的周长是（　　）cm。")
-    add_para(doc, "8. 如图，a∥b，d⊥a 且 d⊥b。写出互相垂直与互相平行的直线：________________。")
+    add_para(doc, "8. 如图，写出互相垂直与互相平行的直线。")
+    add_image(doc, DIAG / "u5_abcd_hd.jpg", 12.0)
     footer(doc, "第五单元（部分）", 1, 2)
 
     page_break(doc)
     section(doc, "二、选一选。")
-    add_para(doc, "1. 被遮挡图形露出两边平行，它不可能是（　　）。（按原卷选项）")
+    add_para(doc, "1. 被遮挡图形露出两边平行，它不可能是（　　）。")
+    add_image(doc, DIAG / "u5_obscured_hd.jpg", 10.0)
     add_para(doc, "　　① 等腰梯形　　② 平行四边形　　③ 长方形　　④ 直角梯形")
     add_para(doc, "2. 在等腰梯形中画一条直线，不能把它分成两个完全相同的（　　）。")
     add_para(doc, "　　① 梯形　　② 平行四边形　　③ 三角形　　④ 长方形")
