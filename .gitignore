@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / editor
+Thumbs.db
+Desktop.ini
+.DS_Store
+.idea/
+.vscode/
+
+# Local previews / temp
+_source/unit-tests/pages-hd/_preview_*.png
+_source/unit-tests/pages-hd/_pdf_jpg/
+
+# Duplicate textbook at repo root (canonical copy lives in units/_textbook/)
+/四年级上册数学_人教版*.pdf
