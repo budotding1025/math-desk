@@ -14,19 +14,29 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from theme import BRAND_LINE, RGB_SKY_DEEP, RGB_SKY_DARK  # noqa: E402
 
-# 对齐人教版四上教材目录（9 单元）。数量关系卷保留在 extra。
+# 对齐 data.js 单元映射（卷面标题按学校上传练习卷）。
 OUT_MAP = {
     "u01": ROOT / "printables" / "u01" / "04-考前测试" / "U1_四上_第一单元_大数的认识",
-    "u03": ROOT / "printables" / "u03" / "04-考前测试" / "U3_四上_第三单元_角的度量",
-    "u04": ROOT / "printables" / "u04" / "04-考前测试" / "U4_四上_第四单元_三位数乘两位数_部分",
-    "u05": ROOT / "printables" / "u05" / "04-考前测试" / "U5_四上_第五单元_平行四边形和梯形_部分",
-    "extra_qty": ROOT
-    / "printables"
-    / "extra-数量关系"
-    / "04-考前测试"
-    / "U4_四上_第四单元_数量关系_部分",
+    "u02": ROOT / "printables" / "u02" / "04-考前测试" / "U2_四上_第二单元_角的度量",
+    "u03": ROOT / "printables" / "u03" / "04-考前测试" / "U3_四上_第三单元_三位数乘两位数",
+    "u04": ROOT / "printables" / "u04" / "04-考前测试" / "U4_四上_第四单元_数量关系",
+    "u05": ROOT / "printables" / "u05" / "04-考前测试" / "U5_四上_第五单元_平行四边形和梯形",
 }
 DIAG = ROOT / "printables" / "_diagrams"
+UNIT_DIRS = {
+    "u01": "u01-大数的认识",
+    "u02": "u02-角的度量",
+    "u03": "u03-三位数乘两位数",
+    "u04": "u04-数量关系",
+    "u05": "u05-平行四边形和梯形",
+}
+ANSWER_MD = {
+    "u01": ROOT / "answers" / "U1_四上_第一单元_大数的认识-参考答案.md",
+    "u02": ROOT / "answers" / "U2_四上_第二单元_角的度量-参考答案.md",
+    "u03": ROOT / "answers" / "U3-U5_乘除法数量关系查漏.md",
+    "u04": ROOT / "answers" / "U3-U5_乘除法数量关系查漏.md",
+    "u05": ROOT / "answers" / "U3-U5_乘除法数量关系查漏.md",
+}
 
 
 def add_image(doc, path: Path, width_cm: float = 15.5):
@@ -87,7 +97,7 @@ def paper_header(doc, unit_cn: str, minutes="40"):
         color=RGB_SKY_DARK,
         space_after=2,
     )
-    add_para(doc, f"时间：{minutes} 分钟", size=11, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=6)
+    add_para(doc, f"时间：{minutes} 分钟　|　清晰重排（非扫描放大）", size=11, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=6)
     add_para(
         doc,
         "学校____________　四年级____班　姓名____________",
@@ -95,6 +105,20 @@ def paper_header(doc, unit_cn: str, minutes="40"):
         align=WD_ALIGN_PARAGRAPH.CENTER,
         space_after=10,
     )
+
+
+def pad_to_four_pages(doc: Document, unit_cn: str):
+    """Ensure Word doc has 4 pages for unified print format."""
+    # Count approximate pages via forced breaks we already inserted; add blanks if short.
+    # Callers for partial papers (2 pages) invoke this to append blank answer-space pages.
+    page_break(doc)
+    add_para(doc, "（本页为作答／竖式／作图空白页）", size=10, align=WD_ALIGN_PARAGRAPH.CENTER, color=RGB_SKY_DEEP)
+    add_para(doc, "", space_after=200)
+    footer(doc, unit_cn, 3, 4)
+    page_break(doc)
+    add_para(doc, "（本页为作答／竖式／作图空白页）", size=10, align=WD_ALIGN_PARAGRAPH.CENTER, color=RGB_SKY_DEEP)
+    add_para(doc, "", space_after=200)
+    footer(doc, unit_cn, 4, 4)
 
 
 def footer(doc, unit_cn: str, page: int, total: int):
@@ -135,7 +159,7 @@ def docx_to_pdf(docx_path: Path, pdf_path: Path, word=None) -> None:
 # ——— U1 ———
 def build_u01() -> Document:
     doc = new_doc()
-    paper_header(doc, "第一单元")
+    paper_header(doc, "第一单元 · 大数的认识")
     section(doc, "一、填空。")
     add_para(doc, "1. 10 个一万是（　　），10 个一百万是（　　），一千万是（　　）个十万，一亿是（　　）个一百万。")
     add_para(doc, "2. 在 ○ 里填“＞”“＜”或“＝”。")
@@ -261,7 +285,7 @@ def build_u01() -> Document:
 
 def build_u02() -> Document:
     doc = new_doc()
-    paper_header(doc, "第二单元")
+    paper_header(doc, "第二单元 · 角的度量", minutes="60")
     add_para(doc, "【说明】图题已按原卷重绘为高清示意图。", size=9, color=RGB_SKY_DEEP)
     section(doc, "一、填空。")
     add_para(doc, "1. 1 周角＝（　　）平角＝（　　）直角。（　　）角＜（　　）角＜（　　）角＜（　　）角＜周角。")
@@ -328,8 +352,8 @@ def build_u02() -> Document:
 
 def build_u03() -> Document:
     doc = new_doc()
-    paper_header(doc, "第三单元")
-    add_para(doc, "【说明】原卷扫描仅有第 1–2 页；图题（竖式箭头）已补全。", size=9, color=RGB_SKY_DEEP)
+    paper_header(doc, "第三单元 · 三位数乘两位数")
+    add_para(doc, "【说明】原卷扫描仅有第 1–2 页；图题（竖式箭头）已补全；第 3–4 页为作答空白。", size=9, color=RGB_SKY_DEEP)
     section(doc, "一、填空。")
     add_para(doc, "1. 23 个 12 的和是（　　），17 个 26 的积是（　　）。")
     add_para(doc, "2. 最大的两位数与最小的三位数的积是（　　）。")
@@ -363,13 +387,14 @@ def build_u03() -> Document:
     add_para(doc, "　　③ 思思：298×32≈9600（298≈300）")
     add_para(doc, "　　④ 乐乐：298×32≈9000（298≈300，32≈30）")
     footer(doc, "第三单元（部分）", 2, 2)
+    pad_to_four_pages(doc, "第三单元（部分）")
     return doc
 
 
 def build_u04() -> Document:
     doc = new_doc()
-    paper_header(doc, "第四单元")
-    add_para(doc, "【说明】原卷扫描仅有第 1–2 页，本卷按已有内容清晰重排。", size=9, color=RGB_SKY_DEEP)
+    paper_header(doc, "第四单元 · 数量关系")
+    add_para(doc, "【说明】原卷扫描仅有第 1–2 页，本卷按已有内容清晰重排；第 3–4 页为作答空白。", size=9, color=RGB_SKY_DEEP)
     section(doc, "一、填空。")
     add_para(doc, "1. 故宫文创店全天接待消费者 1280 人，上午 659 人，下午（　　）人。是根据数量关系（　　）－（　　）＝（　　）来解决问题的。")
     add_para(doc, "2. 图书馆购买了 15 套丛书，每套 108 元，一共花了（　　）元，是根据（　　）×（　　）＝（　　）来解决问题的。")
@@ -401,12 +426,13 @@ def build_u04() -> Document:
     add_para(doc, "　　③ 宽 15 m，长是宽的 4 倍，求面积。")
     add_para(doc, "　　④ 鸡蛋原价 20 元/kg，现价 15 元/kg，买 4 kg 多少钱？")
     footer(doc, "第四单元（部分）", 2, 2)
+    pad_to_four_pages(doc, "第四单元（部分）")
     return doc
 
 
 def build_u05() -> Document:
     doc = new_doc()
-    paper_header(doc, "第五单元")
+    paper_header(doc, "第五单元 · 平行四边形和梯形")
     add_para(doc, "【说明】原卷扫描仅有第 1–2 页，本卷按已有内容清晰重排；图题已用高清示意图补全。", size=9, color=RGB_SKY_DEEP)
     section(doc, "一、填空。")
     add_para(doc, "1. 观察下面各图，互相垂直的是（　　），互相平行的是（　　）。")
@@ -446,19 +472,84 @@ def build_u05() -> Document:
     add_para(doc, "　　（2）过直线 l 上方点 A、下方点 B，分别作 l 的垂线。这两条垂线的位置关系是（　　）。")
     add_image(doc, DIAG / "u5_line_AB_exact.jpg", 12.0)
     footer(doc, "第五单元（部分）", 2, 2)
+    pad_to_four_pages(doc, "第五单元（部分）")
     return doc
 
 
 BUILDERS = {
     "u01": build_u01,
-    "u03": build_u02,  # 角的度量（原 build_u02）
-    "u04": build_u03,  # 三位数乘两位数
+    "u02": build_u02,
+    "u03": build_u03,
+    "u04": build_u04,
     "u05": build_u05,
-    "extra_qty": build_u04,  # 非教材独立单元，素材保留
 }
 
 
+def build_answer_doc(uid: str, title: str) -> Document:
+    """参考答案：从 markdown 抽正文，清晰可打印一页。"""
+    doc = new_doc()
+    add_para(doc, BRAND_LINE, size=10, align=WD_ALIGN_PARAGRAPH.CENTER, color=RGB_SKY_DEEP, space_after=2)
+    add_para(
+        doc,
+        f"{title} · 参考答案",
+        size=15,
+        bold=True,
+        align=WD_ALIGN_PARAGRAPH.CENTER,
+        color=RGB_SKY_DARK,
+        space_after=4,
+    )
+    add_para(doc, "单独答案页 · 可只打印这一页　|　清晰文字版", size=10, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=8)
+    md = ANSWER_MD.get(uid)
+    if md and md.exists():
+        lines = md.read_text(encoding="utf-8").splitlines()
+        for raw in lines:
+            line = raw.rstrip()
+            if not line or line.startswith(">"):
+                continue
+            if line.startswith("#"):
+                add_para(doc, line.lstrip("# ").strip(), size=12, bold=True, color=RGB_SKY_DARK, space_before=6, space_after=4)
+            else:
+                # strip markdown bold markers lightly
+                text = line.replace("**", "").replace("`", "")
+                add_para(doc, text, size=10, space_after=2)
+    else:
+        add_para(doc, "参考答案待按原卷补全；可先对照日常变式自批。", size=11, color=RGB_SKY_DEEP)
+    return doc
+
+
+def publish_triad(stem: Path, paper_pdf: Path, answer_pdf: Path) -> None:
+    """写出 _试卷 / _答案 / 合订本（试卷在前）。"""
+    import shutil
+    import pymupdf
+
+    q_out = Path(str(stem) + "_试卷.pdf")
+    a_out = Path(str(stem) + "_答案.pdf")
+    full_out = Path(str(stem) + ".pdf")
+    shutil.copy2(answer_pdf, a_out)
+
+    src = pymupdf.open(paper_pdf)
+    qdoc = pymupdf.open()
+    take = min(src.page_count, 4)
+    qdoc.insert_pdf(src, from_page=0, to_page=take - 1)
+    src.close()
+    while qdoc.page_count < 4:
+        page = qdoc.new_page(width=595, height=842)
+        page.insert_text((72, 72), "（作答空白页）", fontsize=12, color=(0.12, 0.49, 0.72))
+    qdoc.save(q_out, deflate=True, garbage=4)
+
+    full = pymupdf.open()
+    full.insert_pdf(qdoc)
+    adoc = pymupdf.open(a_out)
+    full.insert_pdf(adoc)
+    adoc.close()
+    qdoc.close()
+    full.save(full_out, deflate=True, garbage=4)
+    full.close()
+    print("  triad", q_out.name, a_out.name, full_out.name)
+
+
 def main() -> int:
+    import shutil
     import win32com.client
 
     word = win32com.client.Dispatch("Word.Application")
@@ -468,33 +559,42 @@ def main() -> int:
             stem = OUT_MAP[key]
             stem.parent.mkdir(parents=True, exist_ok=True)
             docx_path = Path(str(stem) + ".docx")
-            pdf_path = Path(str(stem) + ".pdf")
+            paper_tmp = Path(str(stem) + "_clean_paper.pdf")
+            ans_docx = Path(str(stem) + "_答案.docx")
+            ans_tmp = Path(str(stem) + "_clean_answer.pdf")
             print("==", key, docx_path.name)
             builder().save(str(docx_path))
-            # also copy into units/.../original
-            unit_dirs = {
-                "u01": "u01-大数的认识",
-                "u03": "u03-角的度量",
-                "u04": "u04-三位数乘两位数",
-                "u05": "u05-平行四边形和梯形",
-                "extra_qty": "extra-数量关系（非教材单元）",
-            }
-            import shutil
+            docx_to_pdf(docx_path, paper_tmp, word=word)
 
-            unit_name = unit_dirs.get(key)
+            title_cn = {
+                "u01": "第一单元 · 大数的认识",
+                "u02": "第二单元 · 角的度量",
+                "u03": "第三单元 · 三位数乘两位数",
+                "u04": "第四单元 · 数量关系",
+                "u05": "第五单元 · 平行四边形和梯形",
+            }[key]
+            build_answer_doc(key, title_cn).save(str(ans_docx))
+            docx_to_pdf(ans_docx, ans_tmp, word=word)
+            publish_triad(stem, paper_tmp, ans_tmp)
+            # cleanup temps
+            for p in (paper_tmp, ans_tmp):
+                if p.exists():
+                    p.unlink()
+            unit_name = UNIT_DIRS.get(key)
             if unit_name:
                 orig = ROOT / "units" / unit_name / "04-考前测试" / "original"
                 orig.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(docx_path, orig / docx_path.name)
-            docx_to_pdf(docx_path, pdf_path, word=word)
-            if unit_name:
-                shutil.copy2(pdf_path, orig / pdf_path.name)
-            # legacy folder
+                for suffix in (".docx", ".pdf", "_试卷.pdf", "_答案.pdf", "_答案.docx"):
+                    src = Path(str(stem) + suffix)
+                    if src.exists():
+                        shutil.copy2(src, orig / src.name)
             legacy = ROOT / "printables" / "unit-tests"
             if legacy.exists():
-                shutil.copy2(docx_path, legacy / docx_path.name)
-                shutil.copy2(pdf_path, legacy / pdf_path.name)
-            print("  ok", pdf_path.name, "size", pdf_path.stat().st_size)
+                for suffix in (".docx", ".pdf", "_试卷.pdf", "_答案.pdf"):
+                    src = Path(str(stem) + suffix)
+                    if src.exists():
+                        shutil.copy2(src, legacy / src.name)
+            print("  ok paper", Path(str(stem) + "_试卷.pdf").stat().st_size)
     finally:
         word.Quit()
     print("done")
