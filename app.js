@@ -37,11 +37,12 @@
     state.node = node;
     $("streakLine").innerHTML = "连续 <strong>" + (store.streak.count || 0) + "</strong> 天";
     $("sessionEyebrow").textContent = node.unitTitle;
-    $("sessionTitle").textContent = node.lessonLabel + " · " + node.title.replace(" · 组卷打印", "");
-    $("sessionMeta").textContent =
+    $("sessionTitle").textContent =
       node.type === "daily"
-        ? "约 15 分钟 · 勾选 ①②③ 排成 A4 打印"
-        : "30–40 分钟 · 打印考前卷后自测";
+        ? node.lessonLabel + " · 日常练习"
+        : node.lessonLabel + " · 考前测试";
+    $("sessionMeta").textContent =
+      node.type === "daily" ? "今日练习 · 约 15 分钟" : "今日练习 · 30–40 分钟";
     $("unitLine").textContent = node.unitTitle;
     $("pathSummary").textContent =
       "路径 " + P.completedCount() + " / " + P.semesterPath().length + " 站已练";
@@ -51,16 +52,16 @@
     if (node.type === "daily") {
       primary.textContent = "开始组卷";
       primary.onclick = () => openCompose(node.unitId);
-      secondary.textContent = "打开考前卷";
+      secondary.textContent = "打开考卷";
       secondary.onclick = () => openPdf(node.unit.examPdf);
     } else {
-      primary.textContent = "打开考前卷";
+      primary.textContent = "打开考卷";
       primary.onclick = () => {
         openPdf(node.unit.examPdf);
         P.markDone(node.id);
         renderHome();
       };
-      secondary.textContent = "去日常组卷";
+      secondary.textContent = "去组卷";
       secondary.onclick = () => openCompose(node.unitId);
     }
   }
