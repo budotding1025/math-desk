@@ -6,7 +6,7 @@
   if (!DATA || !P) return;
 
   const $ = (id) => document.getElementById(id);
-  const state = { view: "home", node: null, composeUnitId: "u02" };
+  const state = { view: "home", node: null, composeUnitId: "u02" }; // 教材第二单元：公顷和平方千米
 
   function showView(name) {
     state.view = name;

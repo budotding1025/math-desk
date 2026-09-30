@@ -14,12 +14,17 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from theme import BRAND_LINE, RGB_SKY_DEEP, RGB_SKY_DARK  # noqa: E402
 
+# 对齐人教版四上教材目录（9 单元）。数量关系卷保留在 extra。
 OUT_MAP = {
     "u01": ROOT / "printables" / "u01" / "04-考前测试" / "U1_四上_第一单元_大数的认识",
-    "u02": ROOT / "printables" / "u02" / "04-考前测试" / "U2_四上_第二单元_角的度量",
-    "u03": ROOT / "printables" / "u03" / "04-考前测试" / "U3_四上_第三单元_三位数乘两位数_部分",
-    "u04": ROOT / "printables" / "u04" / "04-考前测试" / "U4_四上_第四单元_数量关系_部分",
+    "u03": ROOT / "printables" / "u03" / "04-考前测试" / "U3_四上_第三单元_角的度量",
+    "u04": ROOT / "printables" / "u04" / "04-考前测试" / "U4_四上_第四单元_三位数乘两位数_部分",
     "u05": ROOT / "printables" / "u05" / "04-考前测试" / "U5_四上_第五单元_平行四边形和梯形_部分",
+    "extra_qty": ROOT
+    / "printables"
+    / "extra-数量关系"
+    / "04-考前测试"
+    / "U4_四上_第四单元_数量关系_部分",
 }
 DIAG = ROOT / "printables" / "_diagrams"
 
@@ -446,10 +451,10 @@ def build_u05() -> Document:
 
 BUILDERS = {
     "u01": build_u01,
-    "u02": build_u02,
-    "u03": build_u03,
-    "u04": build_u04,
+    "u03": build_u02,  # 角的度量（原 build_u02）
+    "u04": build_u03,  # 三位数乘两位数
     "u05": build_u05,
+    "extra_qty": build_u04,  # 非教材独立单元，素材保留
 }
 
 
@@ -469,18 +474,21 @@ def main() -> int:
             # also copy into units/.../original
             unit_dirs = {
                 "u01": "u01-大数的认识",
-                "u02": "u02-角的度量",
-                "u03": "u03-三位数乘两位数",
-                "u04": "u04-数量关系",
+                "u03": "u03-角的度量",
+                "u04": "u04-三位数乘两位数",
                 "u05": "u05-平行四边形和梯形",
+                "extra_qty": "extra-数量关系（非教材单元）",
             }
-            orig = ROOT / "units" / unit_dirs[key] / "04-考前测试" / "original"
-            orig.mkdir(parents=True, exist_ok=True)
             import shutil
 
-            shutil.copy2(docx_path, orig / docx_path.name)
+            unit_name = unit_dirs.get(key)
+            if unit_name:
+                orig = ROOT / "units" / unit_name / "04-考前测试" / "original"
+                orig.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(docx_path, orig / docx_path.name)
             docx_to_pdf(docx_path, pdf_path, word=word)
-            shutil.copy2(pdf_path, orig / pdf_path.name)
+            if unit_name:
+                shutil.copy2(pdf_path, orig / pdf_path.name)
             # legacy folder
             legacy = ROOT / "printables" / "unit-tests"
             if legacy.exists():
