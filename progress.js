@@ -97,32 +97,13 @@
     return Object.keys(s.completed).filter((k) => s.completed[k].count > 0).length;
   }
 
-  function addMistake(entry) {
-    const s = ensure();
-    s.mistakes.unshift(
-      Object.assign(
-        {
-          id: "m" + Date.now(),
-          at: new Date().toISOString().slice(0, 10),
-          unitId: "",
-          unitTitle: "",
-          kind: "计算错",
-          text: "",
-          note: "",
-        },
-        entry
-      )
-    );
-    if (s.mistakes.length > 200) s.mistakes.length = 200;
-    save(s);
+  /** 错题读写已迁至 WrongStore（IndexedDB）；此处仅保留兼容桩 */
+  function addMistake() {
+    console.warn("MathProgress.addMistake deprecated → use WrongStore.putMistake");
   }
-
-  function removeMistake(id) {
-    const s = ensure();
-    s.mistakes = (s.mistakes || []).filter((m) => m.id !== id);
-    save(s);
+  function removeMistake() {
+    console.warn("MathProgress.removeMistake deprecated → use WrongStore.removeMistake");
   }
-
   function listMistakes() {
     return ensure().mistakes || [];
   }

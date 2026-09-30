@@ -1,12 +1,35 @@
-/* 数学书桌 · 主页 / 路径 / 记录（对齐语文框架） */
+/* 数学书桌 · 主页 / 路径 / 记录（错题拍照入库 + 原题/类似题） */
 (function () {
   const DATA = window.MATH_DESK_DATA;
   const DAILY = window.MATH_DAILY || [];
   const P = window.MathProgress;
-  if (!DATA || !P) return;
+  const W = window.WrongStore;
+  if (!DATA || !P || !W) return;
 
   const $ = (id) => document.getElementById(id);
-  const state = { view: "home", node: null, composeUnitId: "u02" }; // 教材第二单元：公顷和平方千米
+  const state = {
+    view: "home",
+    node: null,
+    composeUnitId: "u02",
+    pendingPhotoBlob: null,
+    pendingPhotoUrl: "",
+    photoViewId: "",
+    objectUrls: [],
+  };
+
+  const SOURCE_LABEL = {
+    "daily-calc": "日常 · ① 计算",
+    "daily-key": "日常 · ② 重难点",
+    "daily-app": "日常 · ③ 应用题",
+    exam: "考前测试",
+  };
+
+  function trackFromSource(source) {
+    if (source === "daily-calc") return "calc";
+    if (source === "daily-key") return "key";
+    if (source === "daily-app") return "app";
+    return "";
+  }
 
   function showView(name) {
     state.view = name;
@@ -29,6 +52,33 @@
 
   function dailyBank(unitId) {
     return DAILY.find((u) => u.id === unitId) || DAILY[0];
+  }
+
+  function itemText(raw) {
+    if (raw && typeof raw === "object") return String(raw.text || raw.q || "");
+    return String(raw || "");
+  }
+
+  function sourceItemCount(unitId, source) {
+    if (source === "exam") return 12;
+    const track = trackFromSource(source);
+    const bank = dailyBank(unitId);
+    const section = bank && bank[track];
+    return (section && section.items && section.items.length) || 6;
+  }
+
+  function excerptFromBank(unitId, source, itemNos) {
+    const track = trackFromSource(source);
+    if (!track) return "";
+    const bank = dailyBank(unitId);
+    const section = bank && bank[track];
+    if (!section || !section.items) return "";
+    const lines = [];
+    (itemNos || []).forEach((n) => {
+      const raw = section.items[n - 1];
+      if (raw != null) lines.push(itemText(raw));
+    });
+    return lines.join("\n");
   }
 
   function renderHome() {
@@ -70,7 +120,11 @@
     const store = P.ensure();
     const path = P.semesterPath();
     $("pathMeta").textContent =
-      "共 " + path.length + " 站（每单元：日常练习 + 考前测试）· 已练 " + P.completedCount() + " 站";
+      "共 " +
+      path.length +
+      " 站（每单元：日常 + 考前）· 已练 " +
+      P.completedCount() +
+      " 站 · 做完红笔批改 → 记录页勾题入库";
     const host = $("pathList");
     host.innerHTML = "";
     let lastUnit = "";
@@ -109,7 +163,8 @@
   function openNodePicker(node) {
     state.node = node;
     $("pathNodeTitle").textContent = node.lessonLabel + " · " + node.title;
-    $("pathNodeMeta").textContent = node.unitTitle + " · " + node.kind;
+    $("pathNodeMeta").textContent =
+      node.unitTitle + " · " + node.kind + " · 做完红笔批改 → 记录页勾选题号入库（拍照可选）";
     const grid = $("pathModGrid");
     grid.innerHTML = "";
 
@@ -139,6 +194,21 @@
       grid.appendChild(a);
     }
 
+    const toRec = document.createElement("button");
+    toRec.type = "button";
+    toRec.className = "mod-btn";
+    toRec.innerHTML = "去做完录入错题<small>勾选题号 · 拍照可选可后补</small>";
+    toRec.onclick = () => {
+      $("pathNodeOverlay").classList.add("hidden");
+      showView("records");
+      if ($("mistakeUnit")) $("mistakeUnit").value = node.unitId;
+      if ($("mistakeSource")) {
+        $("mistakeSource").value = node.type === "exam" ? "exam" : "daily-calc";
+        refreshItemNos();
+      }
+    };
+    grid.appendChild(toRec);
+
     const setCur = document.createElement("button");
     setCur.type = "button";
     setCur.className = "mod-btn";
@@ -153,14 +223,57 @@
     $("pathNodeOverlay").classList.remove("hidden");
   }
 
-  function renderRecords() {
+  /* —— 错题录入 —— */
+  function clearPendingPhoto() {
+    if (state.pendingPhotoUrl) URL.revokeObjectURL(state.pendingPhotoUrl);
+    state.pendingPhotoBlob = null;
+    state.pendingPhotoUrl = "";
+    $("mistakePhoto").value = "";
+    $("mistakePhotoPreview").classList.add("hidden");
+    $("mistakePhotoClear").hidden = true;
+  }
+
+  function refreshItemNos() {
+    const unitId = $("mistakeUnit").value;
+    const source = $("mistakeSource").value;
+    const n = sourceItemCount(unitId, source);
+    const host = $("mistakeItemNos");
+    host.innerHTML = "";
+    for (let i = 1; i <= n; i++) {
+      const lab = document.createElement("label");
+      lab.innerHTML = '<input type="checkbox" value="' + i + '" /> ' + i;
+      host.appendChild(lab);
+    }
+    host.querySelectorAll("input").forEach((el) => {
+      el.addEventListener("change", syncExcerptFromChecks);
+    });
+    syncExcerptFromChecks();
+  }
+
+  function selectedItemNos() {
+    return Array.from($("mistakeItemNos").querySelectorAll("input:checked")).map((el) =>
+      Number(el.value)
+    );
+  }
+
+  function syncExcerptFromChecks() {
+    const source = $("mistakeSource").value;
+    if (source === "exam") return;
+    const nos = selectedItemNos();
+    const text = excerptFromBank($("mistakeUnit").value, source, nos);
+    if (text) $("mistakeText").value = text;
+  }
+
+  async function renderRecords() {
+    await W.ready();
     const store = P.ensure();
+    const mistakes = await W.listMistakes();
     $("recordsScore").innerHTML =
       "连续 <b>" +
       (store.streak.count || 0) +
-      "</b> 天 · 路径已练 <b>" +
-      P.completedCount() +
-      "</b> 站<br/><span style='color:var(--muted);font-size:.88rem'>错题分「计算错 / 概念错」更好订正</span>";
+      "</b> 天 · 错题 <b>" +
+      mistakes.length +
+      "</b> 条<br/><span style='color:var(--muted);font-size:.88rem'>勾选题号即可入库；拍照可选，之后可补</span>";
 
     const actions = $("recordsActions");
     actions.innerHTML = "";
@@ -168,52 +281,199 @@
       const b = document.createElement("button");
       b.type = "button";
       b.className = "rec-card";
-      b.innerHTML = "<strong>" + u.name + "</strong><br/><small style='color:var(--muted)'>错题重练纸 · PDF</small>";
+      b.innerHTML =
+        "<strong>" + u.name + "</strong><br/><small style='color:var(--muted)'>空白错题重练纸 · PDF</small>";
       b.onclick = () => openPdf(u.wrongPdf);
       actions.appendChild(b);
     });
 
     const sel = $("mistakeUnit");
+    const prevUnit = sel.value;
     sel.innerHTML = DATA.units
       .map((u) => '<option value="' + u.id + '">' + u.name + "</option>")
       .join("");
+    if (prevUnit && DATA.units.some((u) => u.id === prevUnit)) sel.value = prevUnit;
+    else {
+      const cur = P.currentNode();
+      if (cur) sel.value = cur.unitId;
+    }
+    refreshItemNos();
 
     const list = $("recordsList");
-    const mistakes = P.listMistakes();
     $("recordsMeta").textContent = "我的错题（" + mistakes.length + "）";
+    state.objectUrls.forEach((u) => URL.revokeObjectURL(u));
+    state.objectUrls = [];
+
     if (!mistakes.length) {
-      list.innerHTML = '<p class="meta" style="padding:8px 0">还没有登记错题。做完练习把错题记下来。</p>';
+      list.innerHTML =
+        '<p class="meta" style="padding:8px 0">还没有错题。打印练习 → 红笔批改 → 上方勾选题号入库（拍照可不选）。</p>';
       return;
     }
+
     list.innerHTML = "";
-    mistakes.forEach((m) => {
+    for (const m of mistakes) {
       const div = document.createElement("div");
       div.className = "mistake-item";
+      const nos = (m.itemNos || []).join("、") || "—";
+      let thumbHtml =
+        '<div class="thumb is-empty" aria-hidden="true">暂无<br/>照片</div>';
+      if (m.photoId) {
+        try {
+          const url = await W.getPhotoUrl(m.photoId);
+          if (url) {
+            state.objectUrls.push(url);
+            thumbHtml = '<img class="thumb" src="' + url + '" alt="批改缩略图" />';
+          }
+        } catch (e) {
+          /* ignore */
+        }
+      }
       div.innerHTML =
-        '<div class="row"><div><span class="kind">' +
-        (m.kind || "") +
+        '<div class="row">' +
+        thumbHtml +
+        "<div style='flex:1;min-width:0'><span class='kind'>" +
+        escapeHtml(m.kind || "") +
         " · " +
-        (m.unitTitle || "") +
+        escapeHtml(m.unitTitle || "") +
         " · " +
-        (m.at || "") +
-        "</span><p style='margin:6px 0 0;font-weight:700'>" +
-        (m.text || "") +
+        escapeHtml(SOURCE_LABEL[m.source] || m.source || "") +
+        " · 题 " +
+        escapeHtml(nos) +
+        " · " +
+        escapeHtml(m.at || "") +
+        "</span><p style='margin:6px 0 0;font-weight:700;white-space:pre-wrap'>" +
+        escapeHtml(m.text || "（无摘录）") +
         "</p>" +
-        (m.note ? "<p style='margin:4px 0 0;color:var(--muted);font-size:.88rem'>订正：" + m.note + "</p>" : "") +
-        '</div><button type="button" class="del" data-id="' +
+        (m.note
+          ? "<p style='margin:4px 0 0;color:var(--muted);font-size:.88rem'>订正：" +
+            escapeHtml(m.note) +
+            "</p>"
+          : "") +
+        '<div class="ops">' +
+        '<button type="button" data-act="photo" data-id="' +
         m.id +
-        '">删除</button></div>';
+        '">' +
+        (m.photoId ? "看原图" : "补拍照片") +
+        "</button>" +
+        '<button type="button" data-act="orig" data-id="' +
+        m.id +
+        '">重练原题</button>' +
+        '<button type="button" data-act="similar" data-id="' +
+        m.id +
+        '">练类似题</button>' +
+        '<button type="button" class="del" data-act="del" data-id="' +
+        m.id +
+        '">删除</button>' +
+        "</div></div></div>";
       list.appendChild(div);
-    });
-    list.querySelectorAll(".del").forEach((btn) => {
-      btn.onclick = () => {
-        P.removeMistake(btn.getAttribute("data-id"));
-        renderRecords();
-      };
+    }
+
+    list.querySelectorAll("[data-act]").forEach((btn) => {
+      btn.onclick = () => onMistakeAction(btn.getAttribute("data-act"), btn.getAttribute("data-id"));
     });
   }
 
-  /* —— A4 组卷 —— */
+  async function onMistakeAction(act, id) {
+    if (act === "del") {
+      if (!confirm("删除这条错题？")) return;
+      await W.removeMistake(id);
+      renderRecords();
+      return;
+    }
+    if (act === "photo") {
+      openPhotoViewer(id);
+      return;
+    }
+    if (act === "orig") {
+      await printOriginalPractice(id);
+      return;
+    }
+    if (act === "similar") {
+      await printSimilarPractice(id);
+    }
+  }
+
+  async function openPhotoViewer(id) {
+    state.photoViewId = id;
+    const m = await W.getMistake(id);
+    const body = $("photoOverlayBody");
+    body.innerHTML = "";
+    if (m && m.photoId) {
+      const url = await W.getPhotoUrl(m.photoId);
+      if (url) {
+        state.objectUrls.push(url);
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = "批改照片";
+        body.appendChild(img);
+      } else {
+        body.innerHTML = "<p class='meta'>暂无照片，可用下方按钮补拍。</p>";
+      }
+    } else {
+      body.innerHTML = "<p class='meta'>暂无照片，可用下方按钮补拍。</p>";
+    }
+    $("photoOverlay").classList.remove("hidden");
+  }
+
+  async function submitMistake(e) {
+    e.preventDefault();
+    const unit = P.unitById($("mistakeUnit").value);
+    const source = $("mistakeSource").value;
+    const itemNos = selectedItemNos();
+    if (!itemNos.length) {
+      alert("请至少勾选一道错题题号");
+      return;
+    }
+    let text = ($("mistakeText").value || "").trim();
+    if (!text && source !== "exam") {
+      text = excerptFromBank(unit.id, source, itemNos);
+    }
+    if (!text && source === "exam") {
+      text = "考前测试 · 题号 " + itemNos.join("、") + "（可稍后补摘录）";
+    }
+    if (!text) {
+      alert("请填写题干摘录");
+      return;
+    }
+
+    let photoId = "";
+    if (state.pendingPhotoBlob) {
+      photoId = await W.savePhotoBlob(state.pendingPhotoBlob);
+    }
+
+    await W.putMistake({
+      unitId: unit.id,
+      unitTitle: unit.name,
+      source: source,
+      kind: $("mistakeKind").value,
+      itemNos: itemNos,
+      text: text,
+      note: ($("mistakeNote").value || "").trim(),
+      photoId: photoId,
+    });
+
+    $("mistakeNote").value = "";
+    $("mistakeText").value = "";
+    clearPendingPhoto();
+    $("mistakeItemNos").querySelectorAll("input").forEach((el) => {
+      el.checked = false;
+    });
+    renderRecords();
+  }
+
+  async function exportMistakes() {
+    const rows = await W.exportMeta(false);
+    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), mistakes: rows }, null, 2)], {
+      type: "application/json",
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "math-desk-错题备份.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  /* —— A4 组卷 / 错题练习 —— */
   function selectedTracks() {
     return Array.from(document.querySelectorAll("#trackChecks input:checked")).map((el) => el.value);
   }
@@ -246,7 +506,6 @@
     return (items || []).slice(0, max);
   }
 
-  /** 把过窄填空扩到考前卷同款留白（短／中／长） */
   function widenBlanks(text) {
     return String(text || "")
       .replace(/（[ \t]*）/g, "（　　）")
@@ -276,7 +535,7 @@
   function itemExtras(text, hasFig) {
     if (hasFig) {
       if (/画出|作图|在图上|标出/.test(text) && !/画“○”|画“△”/.test(text)) {
-        /* 已有底图时，不再叠空白作图框，留给图上作答 */
+        /* keep figure only */
       } else if (/写出|说明|答：|思路|步骤|描述|理由|情形/.test(text)) {
         return '<div class="write-area" aria-hidden="true"><span></span><span></span></div>';
       }
@@ -312,7 +571,6 @@
   }
 
   function blockHtml(section, compact) {
-    /* 合订多项时少取题；有图时更少，保证一张 A4 */
     const hasFig = (section.items || []).some((x) => x && typeof x === "object" && x.img);
     const max = compact ? (hasFig ? 2 : 3) : hasFig ? 4 : 6;
     const lis = trimItems(section.items, max).map(itemHtml).join("");
@@ -330,13 +588,15 @@
     );
   }
 
-  function sheetShell(unitTitle, body, meta, pageIndex, pageTotal) {
+  function sheetShell(unitTitle, body, meta, pageIndex, pageTotal, kindTitle) {
     return (
       '<article class="sheet-a4' +
       (pageIndex > 0 ? " page-break" : "") +
       '"><header class="sheet-head"><p class="sheet-brand">数学书桌 · Math Desk</p><p class="sheet-title">' +
       escapeHtml(unitTitle) +
-      ' · 日常练习</p><p class="sheet-meta">' +
+      " · " +
+      escapeHtml(kindTitle || "日常练习") +
+      '</p><p class="sheet-meta">' +
       escapeHtml(meta) +
       "　|　第 " +
       (pageIndex + 1) +
@@ -393,6 +653,119 @@
     URL.revokeObjectURL(a.href);
   }
 
+  async function printOriginalPractice(id) {
+    const m = await W.getMistake(id);
+    if (!m) return;
+    let photoBlock = "";
+    if (m.photoId) {
+      try {
+        const url = await W.getPhotoUrl(m.photoId);
+        if (url) {
+          state.objectUrls.push(url);
+          photoBlock =
+            '<div class="block"><h3>批改照片（对照）</h3><div class="q-fig"><img src="' +
+            url +
+            '" alt="批改照片" style="width:88%;max-width:100%;height:auto" /></div></div>';
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    const lines = String(m.text || "")
+      .split(/\n+/)
+      .filter(Boolean)
+      .map((t, i) => itemHtml(i + 1 + ". " + t.replace(/^\d+\.\s*/, "")))
+      .join("");
+    const body =
+      '<div class="block"><h3>错题原题 · 订正</h3><p class="sub">' +
+      escapeHtml(SOURCE_LABEL[m.source] || "") +
+      " · " +
+      escapeHtml(m.kind || "") +
+      " · 题号 " +
+      escapeHtml((m.itemNos || []).join("、") || "—") +
+      (m.note ? " · 要点：" + escapeHtml(m.note) : "") +
+      '</p><ol class="q">' +
+      (lines || itemHtml(m.text || "（无摘录）")) +
+      "</ol></div>" +
+      photoBlock;
+    $("printRoot").innerHTML = sheetShell(m.unitTitle || "错题", body, "原题订正纸 · 可对照照片", 0, 1, "错题订正");
+    $("btnDownload").disabled = false;
+    window.print();
+  }
+
+  function pickSimilarItems(unitId, source, excludeNos, want) {
+    want = want || 4;
+    const track = trackFromSource(source) || "calc";
+    const bank = dailyBank(unitId);
+    const exclude = new Set((excludeNos || []).map(Number));
+    const picked = [];
+
+    function takeFrom(sectionKey) {
+      const section = bank[sectionKey];
+      if (!section || !section.items) return;
+      section.items.forEach((raw, idx) => {
+        const no = idx + 1;
+        if (sectionKey === track && exclude.has(no)) return;
+        if (picked.length >= want) return;
+        picked.push({ sectionKey: sectionKey, raw: raw });
+      });
+    }
+
+    takeFrom(track);
+    if (picked.length < want) {
+      ["calc", "key", "app"].forEach((k) => {
+        if (k !== track) takeFrom(k);
+      });
+    }
+    return picked.slice(0, want);
+  }
+
+  async function printSimilarPractice(id) {
+    const m = await W.getMistake(id);
+    if (!m) return;
+    if (m.source === "exam") {
+      /* 考前无结构化题库：用该单元日常三线变式 */
+      const bank = dailyBank(m.unitId);
+      const body = ["calc", "key", "app"]
+        .map((k) => bank[k])
+        .filter(Boolean)
+        .map((s) => blockHtml(s, true))
+        .join("");
+      $("printRoot").innerHTML = sheetShell(
+        bank.title,
+        body,
+        "考前错题 · 同单元日常变式（非原卷原题）",
+        0,
+        1,
+        "类似题练习"
+      );
+      $("btnDownload").disabled = false;
+      window.print();
+      return;
+    }
+
+    const picked = pickSimilarItems(m.unitId, m.source, m.itemNos, 5);
+    if (!picked.length) {
+      alert("该单元暂无可用变式题");
+      return;
+    }
+    const lis = picked.map((p) => itemHtml(p.raw)).join("");
+    const track = trackFromSource(m.source);
+    const bank = dailyBank(m.unitId);
+    const title = (bank[track] && bank[track].title) || "类似题";
+    const body =
+      '<div class="block"><h3>' +
+      escapeHtml(title) +
+      ' · 类似题</h3><p class="sub">同单元变式 · 避开已错题号 ' +
+      escapeHtml((m.itemNos || []).join("、") || "—") +
+      ' · 约 15 分钟</p><ol class="q">' +
+      lis +
+      "</ol></div>";
+    $("printRoot").innerHTML = sheetShell(bank.title, body, "错题库 · 类似题型练习", 0, 1, "类似题练习");
+    $("btnDownload").disabled = false;
+    window.print();
+  }
+
   /* events */
   document.querySelectorAll(".nav-item").forEach((btn) => {
     btn.addEventListener("click", () => showView(btn.dataset.nav));
@@ -407,25 +780,59 @@
   });
   $("btnBuild").onclick = buildAndPrint;
   $("btnDownload").onclick = downloadHtml;
+
+  $("mistakeUnit").onchange = refreshItemNos;
+  $("mistakeSource").onchange = refreshItemNos;
   $("mistakeForm").onsubmit = (e) => {
-    e.preventDefault();
-    const unit = P.unitById($("mistakeUnit").value);
-    const text = ($("mistakeText").value || "").trim();
-    if (!text) {
-      alert("请填写错题摘录");
-      return;
-    }
-    P.addMistake({
-      unitId: unit.id,
-      unitTitle: unit.name,
-      kind: $("mistakeKind").value,
-      text: text,
-      note: ($("mistakeNote").value || "").trim(),
+    submitMistake(e).catch((err) => {
+      console.error(err);
+      alert("入库失败，请重试");
     });
-    $("mistakeText").value = "";
-    $("mistakeNote").value = "";
-    renderRecords();
+  };
+  $("btnExportMistakes").onclick = () => {
+    exportMistakes().catch(() => alert("导出失败"));
+  };
+  $("mistakePhotoClear").onclick = clearPendingPhoto;
+  $("mistakePhoto").onchange = async () => {
+    const file = $("mistakePhoto").files && $("mistakePhoto").files[0];
+    if (!file) return;
+    try {
+      const blob = await W.compressImage(file);
+      clearPendingPhoto();
+      state.pendingPhotoBlob = blob;
+      state.pendingPhotoUrl = URL.createObjectURL(blob);
+      $("mistakePhotoImg").src = state.pendingPhotoUrl;
+      $("mistakePhotoPreview").classList.remove("hidden");
+      $("mistakePhotoClear").hidden = false;
+    } catch (err) {
+      alert("图片处理失败，可先不拍、只勾题号入库");
+    }
   };
 
-  showView("home");
+  $("photoOverlayClose").onclick = () => $("photoOverlay").classList.add("hidden");
+  $("photoReplaceInput").onchange = async () => {
+    const file = $("photoReplaceInput").files && $("photoReplaceInput").files[0];
+    if (!file || !state.photoViewId) return;
+    try {
+      const m = await W.getMistake(state.photoViewId);
+      if (!m) return;
+      const blob = await W.compressImage(file);
+      if (m.photoId) await W.deletePhoto(m.photoId);
+      const photoId = await W.savePhotoBlob(blob);
+      await W.updateMistake(m.id, { photoId: photoId });
+      $("photoReplaceInput").value = "";
+      await openPhotoViewer(m.id);
+      renderRecords();
+    } catch (err) {
+      alert("补拍失败，请重试");
+    }
+  };
+
+  if ($("practiceClose")) {
+    $("practiceClose").onclick = () => $("practiceOverlay").classList.add("hidden");
+  }
+
+  W.ready()
+    .then(() => showView("home"))
+    .catch(() => showView("home"));
 })();
