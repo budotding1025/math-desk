@@ -172,29 +172,136 @@ button { cursor: pointer; border: none; background: none; }
 .nav-item.is-on { color: var(--brand-deep); }
 .nav-emoji { font-size: 1.15rem; line-height: 1; }
 
-/* A4 print */
+/* A4 日常练习：对齐考前卷边距/字号（宋体 11pt · 页边距约 16/14mm） */
 .print-root { display: none; }
 .sheet-a4 {
-  width: min(210mm, 100%); min-height: 297mm; margin: 0 auto; background: #fff;
-  color: #12344a; padding: 14mm; border: 1px solid var(--line);
+  --sheet-ink: #111;
+  --sheet-muted: #4a6678;
+  box-sizing: border-box;
+  width: 210mm;
+  min-height: 297mm;
+  margin: 12px auto;
+  background: #fff;
+  color: var(--sheet-ink);
+  padding: 14mm 16mm;
+  border: 1px solid var(--line);
+  font-family: "宋体", SimSun, "Noto Serif SC", serif;
+  font-size: 11pt;
+  line-height: 1.75;
 }
-.sheet-head { text-align: center; margin-bottom: 10px; border-bottom: 2px solid var(--brand-deep); padding-bottom: 8px; }
-.sheet-brand { color: var(--brand-deep); font-weight: 700; margin: 0; }
-.sheet-title { margin: 4px 0 0; color: var(--brand-dark); }
-.sheet-meta { margin: 4px 0 0; font-size: .78rem; color: var(--muted); }
-.block { margin-bottom: 12px; break-inside: avoid; }
-.block h3 { margin: 0 0 6px; color: var(--brand-dark); border-left: 3px solid var(--brand); padding-left: 8px; }
-.block .sub { margin: 0 0 6px; font-size: .78rem; color: var(--muted); }
+.sheet-head {
+  text-align: center;
+  margin: 0 0 8px;
+  border-bottom: 1.5pt solid var(--brand-deep);
+  padding-bottom: 6px;
+}
+.sheet-brand {
+  margin: 0;
+  color: var(--brand-deep);
+  font-size: 10pt;
+  font-weight: 700;
+  font-family: "微软雅黑", "Microsoft YaHei", sans-serif;
+}
+.sheet-title {
+  margin: 4px 0 0;
+  color: var(--brand-dark);
+  font-size: 16pt;
+  font-weight: 700;
+  font-family: "微软雅黑", "Microsoft YaHei", sans-serif;
+  line-height: 1.35;
+}
+.sheet-meta {
+  margin: 4px 0 0;
+  font-size: 10pt;
+  color: var(--sheet-muted);
+  font-family: "宋体", SimSun, serif;
+}
+.sheet-info {
+  margin: 8px 0 12px;
+  text-align: center;
+  font-size: 11pt;
+  letter-spacing: 0.02em;
+}
+.sheet-foot {
+  margin: 14px 0 0;
+  padding-top: 6px;
+  border-top: 0.75pt solid #cfe6f4;
+  font-size: 10pt;
+  color: var(--sheet-muted);
+}
+.block { margin: 0 0 10pt; }
+.block h3 {
+  margin: 0 0 4pt;
+  color: var(--brand-dark);
+  font-size: 12pt;
+  font-weight: 700;
+  font-family: "微软雅黑", "Microsoft YaHei", sans-serif;
+  border-left: 3pt solid var(--brand);
+  padding-left: 6pt;
+  line-height: 1.4;
+}
+.block .sub {
+  margin: 0 0 6pt;
+  font-size: 9pt;
+  color: var(--sheet-muted);
+  line-height: 1.4;
+}
 .block .q { margin: 0; padding: 0; list-style: none; }
-.block .q li { margin: 0 0 5px; font-size: .88rem; line-height: 1.45; }
+.block .q .q-item {
+  margin: 0 0 7pt;
+  font-size: 11pt;
+  line-height: 1.75;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.block .q .q-stem { margin: 0; }
+.block.compact .q .q-item { margin: 0 0 5pt; }
+.write-area {
+  margin: 4pt 0 2pt 1.5em;
+  display: grid;
+  gap: 0;
+}
+.write-area span {
+  display: block;
+  height: 8mm;
+  border-bottom: 0.75pt solid #9bb8cc;
+}
+.calc-box {
+  margin: 4pt 0 2pt 1.5em;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8mm;
+}
+.calc-box::before,
+.calc-box::after {
+  content: "";
+  display: block;
+  height: 32mm;
+  border: 0.75pt dashed #9bb8cc;
+  border-radius: 2pt;
+}
+.draw-box {
+  margin: 4pt 0 2pt 1.5em;
+  height: 42mm;
+  border: 0.75pt dashed #9bb8cc;
+  border-radius: 2pt;
+}
 .page-break { break-before: page; page-break-before: always; }
 
 @media print {
-  body { background: #fff; }
+  html, body { background: #fff !important; margin: 0; }
   .no-print { display: none !important; }
   .print-root { display: block !important; padding: 0; }
-  .sheet-a4 { width: auto; min-height: auto; border: none; padding: 0; box-shadow: none; }
-  @page { size: A4; margin: 12mm; }
+  .sheet-a4 {
+    width: auto;
+    min-height: auto;
+    margin: 0;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+  }
+  /* 与 gen_exam_clean 一致：左右约 16mm，上下约 14mm */
+  @page { size: A4; margin: 14mm 16mm; }
 }
 
 @media (min-width: 720px) {

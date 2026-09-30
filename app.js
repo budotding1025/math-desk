@@ -245,16 +245,48 @@
     return (items || []).slice(0, max);
   }
 
+  /** 把过窄填空扩到考前卷同款留白（短／中／长） */
+  function widenBlanks(text) {
+    return String(text || "")
+      .replace(/（[ \t]*）/g, "（　　）")
+      .replace(/（　）/g, "（　　）")
+      .replace(/_{3,7}(?!_)/g, "______________");
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function itemExtras(text) {
+    if (/竖式/.test(text)) return '<div class="calc-box" aria-hidden="true"></div>';
+    if (/画出|作图/.test(text)) return '<div class="draw-box" aria-hidden="true"></div>';
+    if (/写出|说明|答：|思路|步骤|描述|理由|情形/.test(text)) {
+      return '<div class="write-area" aria-hidden="true"><span></span><span></span><span></span></div>';
+    }
+    return "";
+  }
+
+  function itemHtml(text) {
+    const stem = escapeHtml(widenBlanks(text));
+    return '<li class="q-item"><div class="q-stem">' + stem + "</div>" + itemExtras(text) + "</li>";
+  }
+
   function blockHtml(section, compact) {
-    const lis = trimItems(section.items, compact ? 4 : 6)
-      .map((t) => "<li>" + t + "</li>")
-      .join("");
+    /* 合订多项时少取题，保证 11pt + 足额留白仍落在一张 A4 */
+    const max = compact ? 3 : 6;
+    const lis = trimItems(section.items, max).map(itemHtml).join("");
     return (
-      '<div class="block"><h3>' +
-      section.title +
+      '<div class="block' +
+      (compact ? " compact" : "") +
+      '"><h3>' +
+      escapeHtml(section.title) +
       (compact ? "（精选）" : "") +
       '</h3><p class="sub">' +
-      (section.hint || "") +
+      escapeHtml(section.hint || "") +
       '</p><ol class="q">' +
       lis +
       "</ol></div>"
@@ -266,16 +298,16 @@
       '<article class="sheet-a4' +
       (pageIndex > 0 ? " page-break" : "") +
       '"><header class="sheet-head"><p class="sheet-brand">数学书桌 · Math Desk</p><p class="sheet-title">' +
-      unitTitle +
+      escapeHtml(unitTitle) +
       ' · 日常练习</p><p class="sheet-meta">' +
-      meta +
+      escapeHtml(meta) +
       "　|　第 " +
       (pageIndex + 1) +
       " / " +
       pageTotal +
-      ' 页</p></header><p class="sheet-info">姓名：________　日期：________　完成：____　正确：____</p>' +
+      ' 页　|　A4</p></header><p class="sheet-info">学校____________　四年级____班　姓名____________　日期____________</p>' +
       body +
-      '<p class="sub">订正区：________________________________________________</p></article>'
+      '<p class="sheet-foot">订正区：____________________________________________________________</p></article>'
     );
   }
 
