@@ -5,6 +5,9 @@
   const P = window.MathProgress;
   const W = window.WrongStore;
   if (!DATA || !P || !W) return;
+  if (!DATA.units || DATA.units.length !== 7) {
+    console.error("教材单元数异常", DATA && DATA.units && DATA.units.length);
+  }
 
   const $ = (id) => document.getElementById(id);
   const state = {
@@ -497,7 +500,13 @@
       node.type === "daily" ? "今日练习 · 约 15 分钟" : "今日练习 · 30–40 分钟";
     $("unitLine").textContent = node.unitTitle;
     $("pathSummary").textContent =
-      "路径 " + P.completedCount() + " / " + P.semesterPath().length + " 站已练";
+      "路径 " +
+      P.completedCount() +
+      " / " +
+      P.semesterPath().length +
+      " 站 · " +
+      DATA.units.length +
+      " 单元";
 
     const primary = $("btnHomePrimary");
     const secondary = $("btnHomeSecondary");
@@ -525,11 +534,14 @@
     const store = P.ensure();
     const path = P.semesterPath();
     $("pathMeta").textContent =
-      "共 " +
+      (DATA.book || "人教版四上") +
+      " · " +
+      DATA.units.length +
+      " 个单元 · 共 " +
       path.length +
       " 站（每单元：日常 + 考前）· 已练 " +
       P.completedCount() +
-      " 站 · 做完红笔批改 → 记录页勾题入库";
+      " 站";
     const host = $("pathList");
     host.innerHTML = "";
     let lastUnit = "";
