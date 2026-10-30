@@ -39,7 +39,7 @@ window.MATH_DESK_DATA = {
       examPdf: "printables/u03/04-考前测试/U3_四上_第三单元_多位数乘两位数_试卷.pdf",
       examAnswerPdf: "printables/u03/04-考前测试/U3_四上_第三单元_多位数乘两位数_答案.pdf",
       examComplete: true,
-      examPages: 2,
+      examPages: 4,
       wrongPdf: "printables/u03/05-错题库/u03-错题重练-模板.pdf",
     },
     {
@@ -50,7 +50,7 @@ window.MATH_DESK_DATA = {
       examPdf: "printables/u04/04-考前测试/U4_四上_第四单元_加法模型和乘法模型_试卷.pdf",
       examAnswerPdf: "printables/u04/04-考前测试/U4_四上_第四单元_加法模型和乘法模型_答案.pdf",
       examComplete: true,
-      examPages: 2,
+      examPages: 4,
       wrongPdf: "printables/u04/05-错题库/u04-错题重练-模板.pdf",
     },
     {

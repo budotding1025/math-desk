@@ -62,9 +62,9 @@ UNIT_DIRS = {
 ANSWER_MD = {
     "u01": ROOT / "answers" / "U1_四上_第一单元_大数的认识-参考答案.md",
     "u02": ROOT / "answers" / "U2_四上_第二单元_角的度量-参考答案.md",
-    "u03": ROOT / "answers" / "U3-U5_乘除法数量关系查漏.md",
-    "u04": ROOT / "answers" / "U3-U5_乘除法数量关系查漏.md",
-    "u05": ROOT / "answers" / "U3-U5_乘除法数量关系查漏.md",
+    "u03": ROOT / "answers" / "U3_四上_第三单元_多位数乘两位数-参考答案.md",
+    "u04": ROOT / "answers" / "U4_四上_第四单元_加法模型和乘法模型-参考答案.md",
+    "u05": ROOT / "answers" / "U3-U5_部分答案与题型重难点.md",
 }
 
 
@@ -503,7 +503,7 @@ def u03_p1() -> Document:
     q(doc, "　　城城：12×7＋2（　　）", space_after=6)
     q(doc, "　　思思：14×6＋14×6（　　）", space_after=6)
     q(doc, "　　乐乐：12×10＋12×4（　　）", space_after=6)
-    footer(doc, "第三单元", 1, 2)
+    footer(doc, "第三单元", 1, 4)
     return doc
 
 
@@ -548,7 +548,79 @@ def u03_p2() -> Document:
     q(doc, "　　② 城城：298×32≈8700（298≈290，32≈30）", size=SIZE_OPT, space_after=5)
     q(doc, "　　③ 思思：298×32≈9600（298≈300）", size=SIZE_OPT, space_after=5)
     q(doc, "　　④ 乐乐：298×32≈9000（298≈300，32≈30）", size=SIZE_OPT, space_after=6)
-    footer(doc, "第三单元", 2, 2)
+    footer(doc, "第三单元", 2, 4)
+    return doc
+
+
+
+def u03_p3() -> Document:
+    doc = new_doc()
+    q(
+        doc,
+        "4. 一栋大楼有 70 层，每层有 32 扇窗户，每扇窗户有 6 块玻璃。"
+        "下列式子没有意义的是（　　）。",
+        space_after=4,
+    )
+    q(doc, "　　① 70×32÷6　　② 32×6　　③ 70×32　　④ 70×32×6", size=SIZE_OPT, space_after=10)
+    q(
+        doc,
+        "5. 乐乐用竖式计算晚餐总费用。比较右图式中的甲和乙，下面说法正确的是（　　）。",
+        space_after=4,
+    )
+    add_image(doc, DIAG / "u3_dinner_jia_yi.jpg", 5.5, space_after=6)
+    q(doc, "　　① 甲＞乙　　② 甲＜乙　　③ 甲＝乙　　④ 无法比较", size=SIZE_OPT, space_after=10)
+    section(doc, "三、竖式计算。")
+    q(doc, "　　29×24＝　　　　　　340×25＝", space_after=14)
+    q(doc, "　　26×308＝　　　　　80×460＝", space_after=14)
+    section(doc, "四、解决问题。")
+    q(doc, "1. 蔬菜组运来 15 车黄瓜，每车 65 袋，一共运来黄瓜多少袋？", space_after=6)
+    write_lines(doc, 2)
+    q(
+        doc,
+        "2. 早上妈妈去公园锻炼，步行 9 分钟后，手机计步 App 显示如图。"
+        "照这样计算，她步行 27 分钟，能走多少步？",
+        space_after=4,
+    )
+    add_image(doc, DIAG / "u3_steps_app.jpg", 7.5, space_after=6)
+    write_lines(doc, 2)
+    footer(doc, "第三单元", 3, 4)
+    return doc
+
+
+def u03_p4() -> Document:
+    doc = new_doc()
+    q(
+        doc,
+        "3. 一个社区共有 52 个住户，一个住户每天大约要产生 3 袋垃圾。"
+        "这个社区一个星期（7 天）大约会产生多少袋垃圾？",
+        space_after=6,
+    )
+    write_lines(doc, 2)
+    q(
+        doc,
+        "4. 学校准备在礼堂召开家庭教育讲座，礼堂内每排有 131 个座位，共 22 排，"
+        "有 2500 位家长来参加此次讲座，礼堂的座位够吗？",
+        space_after=6,
+    )
+    write_lines(doc, 3)
+    q(
+        doc,
+        "5. 母亲节来临之际，花店推出了康乃馨的促销活动。张老师要为学校购买 250 盆康乃馨，"
+        "那么他按照现价购买比按照原价购买少花了多少钱？",
+        space_after=4,
+    )
+    q(doc, "　　原价：每盆 30 元　　现价：56 元 / 2 盆", space_after=6)
+    write_lines(doc, 3)
+    q(
+        doc,
+        "6. 学校准备开展数学节活动，李老师要为魔方比赛准备 245 个魔方。"
+        "请你帮他计算一下，在哪里购买魔方比较优惠。",
+        space_after=4,
+    )
+    q(doc, "　　A 商店：原价 12 元/个；促销：每满 100 元减 15 元", size=SIZE_OPT, space_after=4)
+    q(doc, "　　B 商店：原价 12 元/个；促销：买 8 个送 1 个", size=SIZE_OPT, space_after=6)
+    write_lines(doc, 4)
+    footer(doc, "第三单元", 4, 4)
     return doc
 
 
@@ -600,30 +672,124 @@ def u04_p1() -> Document:
     for i, h in enumerate(["速度", "80 千米/时", "120 千米/时", "230 千米/时", "730 千米/时"]):
         tb.rows[1].cells[i].text = h
     gap(doc, 12)
-    footer(doc, "第四单元", 1, 2)
+    footer(doc, "第四单元", 1, 4)
     return doc
 
 
 def u04_p2() -> Document:
     doc = new_doc()
-    q(doc, "7. 竖式 125×23 中，箭头所指部分积表示（　　）件毛衣的总价，是（　　）元。", space_after=6)
-    add_image(doc, DIAG / "u4_125x23_exact.jpg", 6.2, space_after=16)
+    q(
+        doc,
+        "7. 一款毛衣单价 125 元，如图乘法竖式中，箭头所指的部分可以表示（　　）件毛衣的总价，这部分是（　　）元。",
+        space_after=6,
+    )
+    add_image(doc, DIAG / "u4_125x23_exact.jpg", 6.2, space_after=12)
     section(doc, "二、选一选。")
-    q(doc, "1. 复兴号约 350 千米/时，15 分钟行驶多少千米？这个问题求的是（　　）。", space_after=6)
-    q(doc, "　　① 速度　　② 路程　　③ 时间　　④ 车次", size=SIZE_OPT, space_after=16)
-    q(doc, "2. 买 10 个篮球共 400 元，每个多少元？求的是（　　）。", space_after=6)
-    q(doc, "　　① 单价　　② 数量　　③ 总价　　④ 速度", size=SIZE_OPT, space_after=16)
-    q(doc, "3. 下面哪个速度最快？（先统一单位再比较）（　　）。", space_after=6)
-    q(doc, "　　① 约 20 m/s　　② 约 5 km/min　　③ 约 900 km/h　　④ 约 90 km/h", size=SIZE_OPT, space_after=16)
-    q(doc, "4. 骑行 225 米/分，骑 12 分钟。竖式 225×12 中箭头所指（方框内）一步表示（　　）。", space_after=6)
-    add_image(doc, DIAG / "u4_225x12_exact.jpg", 6.2, space_after=8)
-    q(doc, "　　① 1 分钟路程　　② 2 分钟路程　　③ 10 分钟路程　　④ 12 分钟路程", size=SIZE_OPT, space_after=14)
-    q(doc, "5. 下列不能用 15×4 解决的是（　　）。", space_after=6)
-    q(doc, "　　① 4 条丝带，每条 15 m，总长多少？", size=SIZE_OPT, space_after=6)
-    q(doc, "　　② 甲有 15 元，乙是甲的 4 倍，乙有多少？", size=SIZE_OPT, space_after=6)
-    q(doc, "　　③ 宽 15 m，长是宽的 4 倍，求面积。", size=SIZE_OPT, space_after=6)
-    q(doc, "　　④ 鸡蛋原价 20 元/kg，现价 15 元/kg，买 4 kg 多少钱？", size=SIZE_OPT, space_after=8)
-    footer(doc, "第四单元", 2, 2)
+    q(
+        doc,
+        "1. 我国高铁技术发展迅速，复兴号列车的运营时速最高可达每小时 350 千米。"
+        "一列高铁以这个速度行驶 15 分钟能行驶多少千米？是求（　　）。",
+        space_after=4,
+    )
+    q(doc, "　　① 速度　　② 路程　　③ 时间　　④ 车次", size=SIZE_OPT, space_after=10)
+    q(doc, "2. 体育社团购买 10 个同样的篮球，花了 400 元，每个篮球多少元？是求（　　）。", space_after=4)
+    q(doc, "　　① 单价　　② 数量　　③ 总价　　④ 速度", size=SIZE_OPT, space_after=10)
+    q(doc, "3. 比一比，（　　）的速度最快。", space_after=4)
+    q(doc, "　　① 八级大风：速度约为 20 米/秒", size=SIZE_OPT, space_after=3)
+    q(doc, "　　② 高速列车：速度约为 5 千米/分", size=SIZE_OPT, space_after=3)
+    q(doc, "　　③ 民用客机：速度约为 900 千米/时", size=SIZE_OPT, space_after=3)
+    q(doc, "　　④ 小轿车：速度约为 90 千米/时", size=SIZE_OPT, space_after=8)
+    q(
+        doc,
+        "4. 城城骑自行车锻炼身体，每分钟行 225 米，12 分钟行多少米？"
+        "竖式中箭头所指的这一步是在计算（　　）。",
+        space_after=4,
+    )
+    add_image(doc, DIAG / "u4_225x12_exact.jpg", 6.2, space_after=6)
+    q(doc, "　　① 1 分钟可以行多少米　　② 2 分钟可以行多少米", size=SIZE_OPT, space_after=3)
+    q(doc, "　　③ 10 分钟可以行多少米　　④ 12 分钟可以行多少米", size=SIZE_OPT, space_after=8)
+    q(doc, "5. 下面不能用 15×4 解决的是选项（　　）中的问题。", space_after=4)
+    q(doc, "　　① 一根彩带的长度是 15 米，4 根彩带一共长多少米？", size=SIZE_OPT, space_after=3)
+    q(doc, "　　② 甲有 15 元，乙的钱数是甲的 4 倍，乙有多少钱？", size=SIZE_OPT, space_after=3)
+    q(doc, "　　③ 一块地的宽是 15 米，长是宽的 4 倍，这块地的面积是多少平方米？", size=SIZE_OPT, space_after=3)
+    q(doc, "　　④ 鸡蛋原价每千克 20 元，现价是每千克 15 元，买 4 千克需要多少元？", size=SIZE_OPT, space_after=6)
+    footer(doc, "第四单元", 2, 4)
+    return doc
+
+
+
+def u04_p3() -> Document:
+    doc = new_doc()
+    q(
+        doc,
+        "6. 东东、乐乐分别从相距 14 千米的两地同时出发，相向而行。"
+        "东东每小时行 4 千米，乐乐每小时行 3 千米。"
+        "算式 3×[14÷(4＋3)] 求的是（　　）。",
+        space_after=4,
+    )
+    q(doc, "　　① 经过几小时相遇　　② 相遇时东东行的路程", size=SIZE_OPT, space_after=3)
+    q(doc, "　　③ 相遇时乐乐行的路程　　④ 两人一共行驶的路程", size=SIZE_OPT, space_after=10)
+    q(
+        doc,
+        "7. 东东家离学校大约 1200 米。他早上 7:30 从家出发，走路去学校，平均每分钟走 50 米。"
+        "早上 7:50 东东最可能到达（　　）处。",
+        space_after=4,
+    )
+    add_image(doc, DIAG / "u4_path_home_school.jpg", 12.0, space_after=8)
+    section(doc, "三、竖式计算。")
+    q(doc, "　　354×18＝　　　　　　750×40＝", space_after=14)
+    q(doc, "　　75×504＝　　　　　　138×25＝", space_after=14)
+    section(doc, "四、解决问题。")
+    q(
+        doc,
+        "1. 阅读是我们获取知识、启智增慧的重要途径。"
+        "学校计划为四年级 16 个班每班购买一套课外图书，共要花多少钱？（120 元/套）",
+        space_after=6,
+    )
+    write_lines(doc, 2)
+    q(
+        doc,
+        "2. 乐乐家和学校相距 900 米，她从家走到学校用时 18 分钟。"
+        "如果她用同样的速度从家去相距 450 米的书店，需要用多长时间？",
+        space_after=6,
+    )
+    write_lines(doc, 2)
+    q(
+        doc,
+        "3. 秦汉时期的古书中记载：“千里马”可日行千里，夜行八百。"
+        "秦汉时期的一里大约是现在的 420 米。“千里马”一昼夜最远可行多少米？",
+        space_after=6,
+    )
+    write_lines(doc, 2)
+    footer(doc, "第四单元", 3, 4)
+    return doc
+
+
+def u04_p4() -> Document:
+    doc = new_doc()
+    q(doc, "4. 王叔叔打算买 8 千克苹果和 9 千克葡萄，应付多少钱？", space_after=4)
+    add_image(doc, DIAG / "u4_fruit_prices.jpg", 8.0, space_after=6)
+    write_lines(doc, 3)
+    q(
+        doc,
+        "5. 东东一家自驾前往承德旅行，全程 370 km。爸爸驾车行驶 160 km，平均每小时行驶 80 km。"
+        "为避免疲劳驾驶，妈妈驾车行完余下行程，用了 3 小时。",
+        space_after=4,
+    )
+    q(doc, "　　（1）妈妈驾车的平均速度是多少？（先画图分析，再解答）", space_after=6)
+    write_lines(doc, 3)
+    q(doc, "　　（2）根据上面信息，370÷(160÷80＋3) 解决的问题是（　　）。", space_after=8)
+    q(doc, "6. 同学们在老师带领下去烈士陵园缅怀革命先烈。", space_after=4)
+    q(doc, "　　① 同学们从学校步行去烈士陵园，8:20 出发，8:56 到达；", size=SIZE_OPT, space_after=3)
+    q(doc, "　　② 老师带了 840 元去花店买花；", size=SIZE_OPT, space_after=3)
+    q(doc, "　　③ 同学们的步行速度是 57 米/分；", size=SIZE_OPT, space_after=3)
+    q(doc, "　　④ 老师刚好可以买 24 束百合花；老师也可以买 22 束菊花，还剩 4 元。", size=SIZE_OPT, space_after=6)
+    q(doc, "　　（1）想计算“学校到烈士陵园有多远”应选择信息（　　）（填序号），解决这个问题用到的数量关系是（　　）。", space_after=6)
+    q(doc, "　　（2）请你列式计算解决上面的问题。", space_after=6)
+    write_lines(doc, 2)
+    q(doc, "　　（3）请你提出其他数学问题并解答。", space_after=6)
+    write_lines(doc, 3)
+    footer(doc, "第四单元", 4, 4)
     return doc
 
 
@@ -683,8 +849,8 @@ def u05_p2() -> Document:
 PAGE_BUILDERS = {
     "u01": [u01_p1, u01_p2, u01_p3, u01_p4],
     "u02": [u02_p1, u02_p2, u02_p3, u02_p4],
-    "u03": [u03_p1, u03_p2],
-    "u04": [u04_p1, u04_p2],
+    "u03": [u03_p1, u03_p2, u03_p3, u03_p4],
+    "u04": [u04_p1, u04_p2, u04_p3, u04_p4],
     "u05": [u05_p1, u05_p2],
 }
 
@@ -711,12 +877,16 @@ def build_answer_doc(uid: str, title: str) -> Document:
 def main() -> int:
     import win32com.client
 
-    word = win32com.client.Dispatch("Word.Application")
+    only = {a for a in sys.argv[1:] if a in PAGE_BUILDERS}
+    word = win32com.client.DispatchEx("Word.Application")
     word.Visible = False
+    word.DisplayAlerts = 0
     tmp = ROOT / "_tmp" / "a4_word_pages"
     tmp.mkdir(parents=True, exist_ok=True)
     try:
         for uid, builders in PAGE_BUILDERS.items():
+            if only and uid not in only:
+                continue
             stem = OUT_MAP[uid]
             stem.parent.mkdir(parents=True, exist_ok=True)
             print("==", uid)
@@ -741,15 +911,16 @@ def main() -> int:
                 after.close()
                 page_pdfs.append(pdf_path)
 
-            # 合成为可编辑 docx（逐页粘贴）
+            # 合成为可编辑 docx（InsertFile，避免 Clipboard Paste 失败）
             full_docx = Path(str(stem) + ".docx")
             first = word.Documents.Open(str((tmp / f"{uid}_p1.docx").resolve()))
             for i in range(2, len(builders) + 1):
-                first.Paragraphs.Last.Range.InsertBreak(7)
-                sub = word.Documents.Open(str((tmp / f"{uid}_p{i}.docx").resolve()))
-                sub.Content.Copy()
-                first.Paragraphs.Last.Range.Paste()
-                sub.Close(False)
+                end = first.Content
+                end.Collapse(0)  # wdCollapseEnd
+                end.InsertBreak(7)  # wdPageBreak
+                end = first.Content
+                end.Collapse(0)
+                end.InsertFile(str((tmp / f"{uid}_p{i}.docx").resolve()))
             first.SaveAs(str(full_docx.resolve()))
             first.Close(False)
 
