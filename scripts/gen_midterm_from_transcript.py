@@ -107,6 +107,20 @@ def write_lines(doc, n: int, *, width: str = LINE, space_after: float = 8):
         add_para(doc, "　　" + width, size=SIZE_BODY, space_after=space_after, line_spacing=1.35)
 
 
+def add_image(doc, path: Path, width_cm: float, *, space_before: float = 2, space_after: float = 6):
+    if not path.exists():
+        add_para(doc, f"【缺图：{path.name}】", size=9, space_after=4, color=RGB_MUTED)
+        return
+    doc.add_picture(str(path), width=Cm(width_cm))
+    p = doc.paragraphs[-1]
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_before = Pt(space_before)
+    p.paragraph_format.space_after = Pt(space_after)
+
+
+FIG_TAG = re.compile(r"^【图\|([A-Za-z0-9_]+)\|([0-9.]+)】")
+
+
 def new_doc() -> Document:
     doc = Document()
     sec = doc.sections[0]
@@ -198,7 +212,6 @@ class Layout:
 
     @property
     def blank_gap(self) -> float:
-        # 填空题后竖向作答/草稿空
         return [4, 8, 12, 16, 20, 24][self.level]
 
     @property
@@ -211,7 +224,6 @@ class Layout:
 
     @property
     def calc_gap(self) -> float:
-        # 竖式区整块高度
         return [18, 28, 36, 44, 52, 60][self.level]
 
     @property
@@ -221,6 +233,27 @@ class Layout:
     @property
     def line_spacing(self) -> float:
         return [1.15, 1.2, 1.25, 1.28, 1.3, 1.32][self.level]
+
+
+def try_embed_figure(doc, text: str, fig_dir: Path | None, layout: Layout) -> bool:
+    """Parse 【图|id|width_cm】 and embed cropped original figure."""
+    m = FIG_TAG.match(text.strip())
+    if not m:
+        return False
+    fig_id, width_s = m.group(1), m.group(2)
+    width = float(width_s)
+    if layout.level <= 1:
+        width *= 0.82
+    elif layout.level <= 2:
+        width *= 0.9
+    path = (fig_dir / f"{fig_id}.jpg") if fig_dir else None
+    if path is None or not path.exists():
+        path = (fig_dir / f"{fig_id}.png") if fig_dir else None
+    if path and path.exists():
+        add_image(doc, path, width)
+    else:
+        add_para(doc, f"【缺图：{fig_id}】", size=9, space_after=3, color=RGB_MUTED)
+    return True
 
 
 def write_page(
@@ -234,6 +267,7 @@ def write_page(
     first: bool,
     note: str = "",
     layout: Layout | None = None,
+    fig_dir: Path | None = None,
 ):
     L = layout or Layout(3)
     if first:
@@ -334,7 +368,11 @@ def write_page(
             continue
 
         if text.startswith("【图"):
-            # 长图注吃版面；收紧时改短占位，把竖直空间留给作答
+            if try_embed_figure(doc, text, fig_dir, L):
+                if kind == "draw":
+                    pending_after = "draw"
+                continue
+            # 兼容旧长图注：收紧时缩短
             if L.level <= 2 and len(text) > 36:
                 text = "【图：见题意示意，可在空白处作图】"
             add_para(doc, text, size=9, space_after=2, color=RGB_MUTED, line_spacing=1.1)
@@ -426,6 +464,7 @@ def export_fitted_page(
     chosen_level = 0
     pdf_path = tmp / f"p{page}.pdf"
     docx_path = tmp / f"p{page}.docx"
+    fig_dir = Path(spec["dir"]) / "figures"
 
     for level in range(5, -1, -1):
         doc = new_doc()
@@ -439,6 +478,7 @@ def export_fitted_page(
             first=first,
             note=spec.get("note", "") if first else "",
             layout=Layout(level),
+            fig_dir=fig_dir,
         )
         trial_docx = tmp / f"p{page}_L{level}.docx"
         trial_pdf = tmp / f"p{page}_L{level}.pdf"
