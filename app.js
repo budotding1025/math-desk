@@ -58,9 +58,90 @@
     if (name === "records") renderRecords();
   }
 
+  /** 相对资源 → 绝对 URL（逐段编码中文路径，避免无法打开/下载） */
+  function assetUrl(rel) {
+    if (!rel) return "";
+    if (/^(https?:|blob:|data:)/i.test(rel)) return rel;
+    const encoded = String(rel)
+      .split("/")
+      .map((seg) => encodeURIComponent(seg))
+      .join("/");
+    return new URL(encoded, new URL("./", window.location.href)).href;
+  }
+
+  function fileNameFromPath(path, fallback) {
+    const raw = String(path || "").split("/").pop() || fallback || "试卷.pdf";
+    try {
+      return decodeURIComponent(raw);
+    } catch (e) {
+      return raw;
+    }
+  }
+
+  /** 打开 PDF：用 <a> 点击，比 window.open 少被拦截 */
   function openPdf(url) {
-    if (!url) return;
-    window.open(url, "_blank");
+    const href = assetUrl(url);
+    if (!href) return;
+    const a = document.createElement("a");
+    a.href = href;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  /** 下载 PDF 到本地（fetch→blob，手机/微信也可存文件） */
+  async function downloadPdf(url, filename) {
+    const href = assetUrl(url);
+    if (!href) return;
+    const name = filename || fileNameFromPath(url, "试卷.pdf");
+    try {
+      const res = await fetch(href);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const blob = await res.blob();
+      const obj = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = obj;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(obj), 4000);
+    } catch (e) {
+      console.warn("downloadPdf fallback", e);
+      openPdf(url);
+    }
+  }
+
+  /** 打印 PDF：拉成 blob 再开页调用系统打印 */
+  async function printPdf(url) {
+    const href = assetUrl(url);
+    if (!href) return;
+    try {
+      const res = await fetch(href);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const buf = await res.arrayBuffer();
+      const obj = URL.createObjectURL(new Blob([buf], { type: "application/pdf" }));
+      const w = window.open(obj, "_blank");
+      if (!w) {
+        openPdf(url);
+        return;
+      }
+      const tryPrint = () => {
+        try {
+          w.focus();
+          w.print();
+        } catch (err) {
+          /* 部分浏览器需用户在 PDF 页点打印 */
+        }
+      };
+      setTimeout(tryPrint, 600);
+      setTimeout(() => URL.revokeObjectURL(obj), 120000);
+    } catch (e) {
+      console.warn("printPdf fallback", e);
+      openPdf(url);
+    }
   }
 
   function dailyBank(unitId) {
@@ -247,7 +328,7 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc =
         "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
     }
-    const doc = await pdfjsLib.getDocument(url).promise;
+    const doc = await pdfjsLib.getDocument(assetUrl(url)).promise;
     const pages = [];
     for (let i = 1; i <= doc.numPages; i++) {
       const page = await doc.getPage(i);
@@ -538,10 +619,10 @@
         P.markDone(node.id);
         renderHome();
       };
-      secondary.textContent = node.unit.examAnswerPdf ? "打印答案" : "去组卷";
+      secondary.textContent = "下载试卷";
       secondary.onclick = () => {
-        if (node.unit.examAnswerPdf) openPdf(node.unit.examAnswerPdf);
-        else openCompose(node.unitId);
+        downloadPdf(node.unit.examPdf, fileNameFromPath(node.unit.examPdf, "试卷.pdf"));
+        P.markDone(node.id);
       };
     }
   }
@@ -633,16 +714,54 @@
         $("pathNodeOverlay").classList.add("hidden");
       };
       grid.appendChild(a);
+
+      const dl = document.createElement("button");
+      dl.type = "button";
+      dl.className = "mod-btn";
+      dl.innerHTML = "下载试卷 PDF<small>保存到手机/电脑后再打印更稳</small>";
+      dl.onclick = () => {
+        downloadPdf(
+          node.unit.examPdf,
+          fileNameFromPath(node.unit.examPdf, "试卷.pdf")
+        );
+        P.markDone(node.id);
+        $("pathNodeOverlay").classList.add("hidden");
+      };
+      grid.appendChild(dl);
+
+      const pr = document.createElement("button");
+      pr.type = "button";
+      pr.className = "mod-btn";
+      pr.innerHTML = "打印试卷<small>调起系统打印对话框</small>";
+      pr.onclick = () => {
+        printPdf(node.unit.examPdf);
+        P.markDone(node.id);
+        $("pathNodeOverlay").classList.add("hidden");
+      };
+      grid.appendChild(pr);
+
       if (node.unit.examAnswerPdf) {
         const ans = document.createElement("button");
         ans.type = "button";
         ans.className = "mod-btn";
-        ans.innerHTML = "打印参考答案<small>单独答案页</small>";
+        ans.innerHTML = "打开参考答案<small>可再下载/打印</small>";
         ans.onclick = () => {
           openPdf(node.unit.examAnswerPdf);
           $("pathNodeOverlay").classList.add("hidden");
         };
         grid.appendChild(ans);
+        const ansDl = document.createElement("button");
+        ansDl.type = "button";
+        ansDl.className = "mod-btn";
+        ansDl.innerHTML = "下载参考答案<small>单独答案页</small>";
+        ansDl.onclick = () => {
+          downloadPdf(
+            node.unit.examAnswerPdf,
+            fileNameFromPath(node.unit.examAnswerPdf, "答案.pdf")
+          );
+          $("pathNodeOverlay").classList.add("hidden");
+        };
+        grid.appendChild(ansDl);
       }
     }
 
