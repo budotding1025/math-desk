@@ -677,42 +677,41 @@ def u04_p1() -> Document:
 
 
 def u04_p2() -> Document:
+    """第 2 页内容多：必须压进 Word 单页，禁止触发 fit_one 位图缩放（字会变糊变小）。"""
     doc = new_doc()
     q(
         doc,
         "7. 一款毛衣单价 125 元，如图乘法竖式中，箭头所指的部分可以表示（　　）件毛衣的总价，这部分是（　　）元。",
-        space_after=6,
+        space_after=4,
     )
-    add_image(doc, DIAG / "u4_125x23_exact.jpg", 6.2, space_after=12)
+    add_image(doc, DIAG / "u4_125x23_exact.jpg", 4.6, space_after=4)
     section(doc, "二、选一选。")
     q(
         doc,
         "1. 我国高铁技术发展迅速，复兴号列车的运营时速最高可达每小时 350 千米。"
         "一列高铁以这个速度行驶 15 分钟能行驶多少千米？是求（　　）。",
-        space_after=4,
+        space_after=3,
     )
-    q(doc, "　　① 速度　　② 路程　　③ 时间　　④ 车次", size=SIZE_OPT, space_after=10)
-    q(doc, "2. 体育社团购买 10 个同样的篮球，花了 400 元，每个篮球多少元？是求（　　）。", space_after=4)
-    q(doc, "　　① 单价　　② 数量　　③ 总价　　④ 速度", size=SIZE_OPT, space_after=10)
-    q(doc, "3. 比一比，（　　）的速度最快。", space_after=4)
-    q(doc, "　　① 八级大风：速度约为 20 米/秒", size=SIZE_OPT, space_after=3)
-    q(doc, "　　② 高速列车：速度约为 5 千米/分", size=SIZE_OPT, space_after=3)
-    q(doc, "　　③ 民用客机：速度约为 900 千米/时", size=SIZE_OPT, space_after=3)
-    q(doc, "　　④ 小轿车：速度约为 90 千米/时", size=SIZE_OPT, space_after=8)
+    q(doc, "　　① 速度　　② 路程　　③ 时间　　④ 车次", size=SIZE_OPT, space_after=6)
+    q(doc, "2. 体育社团购买 10 个同样的篮球，花了 400 元，每个篮球多少元？是求（　　）。", space_after=3)
+    q(doc, "　　① 单价　　② 数量　　③ 总价　　④ 速度", size=SIZE_OPT, space_after=6)
+    q(doc, "3. 比一比，（　　）的速度最快。", space_after=3)
+    q(doc, "　　① 八级大风：约 20 米/秒　　② 高速列车：约 5 千米/分", size=SIZE_OPT, space_after=2)
+    q(doc, "　　③ 民用客机：约 900 千米/时　　④ 小轿车：约 90 千米/时", size=SIZE_OPT, space_after=6)
     q(
         doc,
         "4. 城城骑自行车锻炼身体，每分钟行 225 米，12 分钟行多少米？"
         "竖式中箭头所指的这一步是在计算（　　）。",
-        space_after=4,
+        space_after=3,
     )
-    add_image(doc, DIAG / "u4_225x12_exact.jpg", 6.2, space_after=6)
-    q(doc, "　　① 1 分钟可以行多少米　　② 2 分钟可以行多少米", size=SIZE_OPT, space_after=3)
-    q(doc, "　　③ 10 分钟可以行多少米　　④ 12 分钟可以行多少米", size=SIZE_OPT, space_after=8)
-    q(doc, "5. 下面不能用 15×4 解决的是选项（　　）中的问题。", space_after=4)
-    q(doc, "　　① 一根彩带的长度是 15 米，4 根彩带一共长多少米？", size=SIZE_OPT, space_after=3)
-    q(doc, "　　② 甲有 15 元，乙的钱数是甲的 4 倍，乙有多少钱？", size=SIZE_OPT, space_after=3)
-    q(doc, "　　③ 一块地的宽是 15 米，长是宽的 4 倍，这块地的面积是多少平方米？", size=SIZE_OPT, space_after=3)
-    q(doc, "　　④ 鸡蛋原价每千克 20 元，现价是每千克 15 元，买 4 千克需要多少元？", size=SIZE_OPT, space_after=6)
+    add_image(doc, DIAG / "u4_225x12_exact.jpg", 4.6, space_after=3)
+    q(doc, "　　① 1 分钟可以行多少米　　② 2 分钟可以行多少米", size=SIZE_OPT, space_after=2)
+    q(doc, "　　③ 10 分钟可以行多少米　　④ 12 分钟可以行多少米", size=SIZE_OPT, space_after=6)
+    q(doc, "5. 下面不能用 15×4 解决的是选项（　　）中的问题。", space_after=3)
+    q(doc, "　　① 一根彩带长 15 米，4 根一共长多少米？", size=SIZE_OPT, space_after=2)
+    q(doc, "　　② 甲有 15 元，乙是甲的 4 倍，乙有多少钱？", size=SIZE_OPT, space_after=2)
+    q(doc, "　　③ 宽 15 米，长是宽的 4 倍，求这块地的面积。", size=SIZE_OPT, space_after=2)
+    q(doc, "　　④ 鸡蛋现价每千克 15 元，买 4 千克需要多少元？（原价 20 元/千克）", size=SIZE_OPT, space_after=4)
     footer(doc, "第四单元", 2, 4)
     return doc
 
