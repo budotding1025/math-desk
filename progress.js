@@ -26,10 +26,14 @@
   }
 
   function unitById(id) {
-    return (DATA.units || []).find((u) => u.id === id) || DATA.units[0];
+    const fromUnit = (DATA.units || []).find((u) => u.id === id);
+    if (fromUnit) return fromUnit;
+    const fromMid = (DATA.midterms || []).find((m) => m.id === id);
+    if (fromMid) return fromMid;
+    return DATA.units[0];
   }
 
-  /** 路径节点：每单元 2 站 —— 日常练习、考前测试 */
+  /** 路径节点：每单元 2 站；U4 后插入期中卷 */
   function semesterPath() {
     const nodes = [];
     (DATA.units || []).forEach((u) => {
@@ -58,6 +62,29 @@
         lessonLabel: "第二课",
         unit: u,
       });
+      if (u.id === "u04") {
+        (DATA.midterms || []).forEach((m, i) => {
+          nodes.push({
+            type: "midterm",
+            id: m.id,
+            unitId: m.id,
+            unitTitle: "期中练习",
+            unitNo: "中",
+            title: m.short || m.name,
+            kind:
+              (m.examPages || 4) +
+              " 页" +
+              (m.examComplete ? " · 完整" : " · 缺页") +
+              " · 约 " +
+              (m.minutes || 90) +
+              " 分钟 · " +
+              m.name,
+            lessonLabel: i === 0 ? "第一课" : "第二课",
+            unit: m,
+            midterm: m,
+          });
+        });
+      }
     });
     return nodes;
   }
@@ -72,7 +99,8 @@
   function setCurrent(unitId, track) {
     const s = ensure();
     s.currentUnitId = unitId;
-    s.currentTrack = track === "exam" ? "exam" : "daily";
+    s.currentTrack =
+      track === "exam" || track === "midterm" ? track : "daily";
     bumpStreak(s);
     save(s);
   }

@@ -87,4 +87,32 @@ window.MATH_DESK_DATA = {
       wrongPdf: "printables/u07/05-错题库/u07-错题重练-模板.pdf",
     },
   ],
+  /**
+   * 期中练习卷（U1–U4 综合）。A 优先；D 作计算/附加拔高。
+   * B/C 仅原图归档，不进站内列表。
+   */
+  midterms: [
+    {
+      id: "mid-a",
+      name: "期中综合练习卷",
+      short: "期中综合",
+      minutes: 90,
+      examPdf: "printables/midterm/A-期中综合练习卷/期中综合练习卷_试卷.pdf",
+      examAnswerPdf: "printables/midterm/A-期中综合练习卷/期中综合练习卷_答案.pdf",
+      examComplete: false,
+      examPages: 4,
+      note: "原质量检测卷 · 缺第 5 页 · 更贴近东城风",
+    },
+    {
+      id: "mid-d",
+      name: "期中重点练计算和附加卷",
+      short: "期中计算附加",
+      minutes: 90,
+      examPdf: "printables/midterm/D-期中重点练计算和附加卷/期中重点练计算和附加卷_试卷.pdf",
+      examAnswerPdf: "printables/midterm/D-期中重点练计算和附加卷/期中重点练计算和附加卷_答案.pdf",
+      examComplete: true,
+      examPages: 4,
+      note: "原 2026 人教期中 · 含附加题 · 算练拔高",
+    },
+  ],
 };

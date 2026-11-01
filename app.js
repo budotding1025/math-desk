@@ -348,19 +348,29 @@
     opts = opts || {};
     bindMarkInkOnce();
     const sel = $("markUnit");
-    sel.innerHTML = DATA.units
-      .map((u) => '<option value="' + u.id + '">' + u.name + "</option>")
+    const midOpts = (DATA.midterms || [])
+      .map((m) => '<option value="' + m.id + '">' + m.name + "</option>")
       .join("");
+    sel.innerHTML =
+      DATA.units
+        .map((u) => '<option value="' + u.id + '">' + u.name + "</option>")
+        .join("") + midOpts;
     const preferUnit =
       opts.unitId ||
       (state.node && state.node.unitId) ||
       (P.currentNode() && P.currentNode().unitId) ||
       DATA.currentUnitId;
-    if (preferUnit && DATA.units.some((u) => u.id === preferUnit)) sel.value = preferUnit;
+    const known =
+      DATA.units.some((u) => u.id === preferUnit) ||
+      (DATA.midterms || []).some((m) => m.id === preferUnit);
+    if (preferUnit && known) sel.value = preferUnit;
 
     let preferSource = opts.source || "exam";
     if (!opts.source && state.node) {
-      preferSource = state.node.type === "exam" ? "exam" : "daily-calc";
+      preferSource =
+        state.node.type === "exam" || state.node.type === "midterm"
+          ? "exam"
+          : "daily-calc";
     }
     $("markSource").value = preferSource;
     $("markMeta").textContent = "在原卷上用红笔画圈，圈完点「记上了」";
@@ -495,9 +505,15 @@
     $("sessionTitle").textContent =
       node.type === "daily"
         ? node.lessonLabel + " · 日常练习"
-        : node.lessonLabel + " · 考前测试";
+        : node.type === "midterm"
+          ? node.lessonLabel + " · " + node.title
+          : node.lessonLabel + " · 考前测试";
     $("sessionMeta").textContent =
-      node.type === "daily" ? "今日练习 · 约 15 分钟" : "今日练习 · 30–40 分钟";
+      node.type === "daily"
+        ? "今日练习 · 约 15 分钟"
+        : node.type === "midterm"
+          ? "期中卷 · 约 " + ((node.midterm && node.midterm.minutes) || 90) + " 分钟"
+          : "今日练习 · 30–40 分钟";
     $("unitLine").textContent = node.unitTitle;
     $("pathSummary").textContent =
       "路径 " +
@@ -539,7 +555,7 @@
       DATA.units.length +
       " 个单元 · 共 " +
       path.length +
-      " 站（每单元：日常 + 考前）· 已练 " +
+      " 站（日常 + 考前 + 期中）· 已练 " +
       P.completedCount() +
       " 站";
     const host = $("pathList");
@@ -559,7 +575,8 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "path-node" + (done ? " is-done" : "") + (current ? " is-current" : "");
-      const badge = node.type === "daily" ? "练" : "测";
+      const badge =
+        node.type === "daily" ? "练" : node.type === "midterm" ? "中" : "测";
       btn.innerHTML =
         '<span class="path-badge">' +
         badge +
@@ -600,11 +617,16 @@
       a.type = "button";
       a.className = "mod-btn";
       const pages = node.unit.examPages || 0;
+      const isMid = node.type === "midterm";
       a.innerHTML =
-        "打开考前测试（试卷）<small>" +
+        (isMid ? "打开期中试卷" : "打开考前测试（试卷）") +
+        "<small>" +
         (node.unit.examComplete ? "完整 " : "部分 ") +
-        (pages ? pages + " 页 · 对齐上传 JPG" : "待补") +
-        " · 30–40 分钟</small>";
+        (pages ? pages + " 页" : "待补") +
+        (isMid
+          ? " · 约 " + ((node.midterm && node.midterm.minutes) || 90) + " 分钟"
+          : " · 对齐上传 JPG · 30–40 分钟") +
+        "</small>";
       a.onclick = () => {
         openPdf(node.unit.examPdf);
         P.markDone(node.id);
@@ -632,7 +654,8 @@
       $("pathNodeOverlay").classList.add("hidden");
       openMarkSheet({
         unitId: node.unitId,
-        source: node.type === "exam" ? "exam" : "daily-calc",
+        source:
+          node.type === "exam" || node.type === "midterm" ? "exam" : "daily-calc",
       });
     };
     grid.appendChild(toRec);
