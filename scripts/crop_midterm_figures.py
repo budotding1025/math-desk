@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Crop midterm figures from upright source pages into figures/ folders."""
+"""Crop midterm figures from upright source pages (diagram-only boxes)."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,8 +14,9 @@ D_FIG = ROOT / "printables" / "midterm" / "D-期中重点练计算和附加卷" 
 
 def prep(im: Image.Image) -> Image.Image:
     im = im.convert("RGB")
-    im = ImageOps.autocontrast(im, cutoff=1)
-    im = ImageEnhance.Sharpness(im).enhance(1.3)
+    im = ImageOps.autocontrast(im, cutoff=0.5)
+    im = ImageEnhance.Sharpness(im).enhance(1.35)
+    im = ImageEnhance.Contrast(im).enhance(1.08)
     return im
 
 
@@ -25,15 +26,14 @@ def crop_frac(im: Image.Image, box: tuple[float, float, float, float]) -> Image.
     return im.crop((int(l * w), int(t * h), int(r * w), int(b * h)))
 
 
-def save(im: Image.Image, path: Path, scale: float = 2.2) -> None:
+def save(im: Image.Image, path: Path, scale: float = 2.6) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     out = prep(im)
-    if scale != 1.0:
-        out = out.resize(
-            (max(1, int(out.width * scale)), max(1, int(out.height * scale))),
-            Image.Resampling.LANCZOS,
-        )
-    out.save(path, quality=93)
+    out = out.resize(
+        (max(1, int(out.width * scale)), max(1, int(out.height * scale))),
+        Image.Resampling.LANCZOS,
+    )
+    out.save(path, quality=94)
     print("OK", path.relative_to(ROOT), out.size)
 
 
@@ -74,21 +74,22 @@ def main() -> None:
     D3 = Image.open(TMP / "D_p3.jpg")
     D4 = Image.open(TMP / "D_p4.jpg")
 
-    # tighter crops — diagram only
-    save(crop_frac(A7907_L, (0.58, 0.68, 0.95, 0.86)), A_FIG / "a_setsquares.jpg")
-    save(crop_frac(A7907_R, (0.62, 0.20, 0.95, 0.36)), A_FIG / "a_plane.jpg")
-    save(crop_frac(A7907_R, (0.12, 0.40, 0.72, 0.55)), A_FIG / "a_route.jpg")
-    save(crop_frac(A7907_R, (0.10, 0.72, 0.90, 0.86)), A_FIG / "a_fold_abc.jpg")
-    save(crop_frac(A7908_L, (0.22, 0.58, 0.72, 0.66)), A_FIG / "a_ray_ab.jpg")
-    save(crop_frac(A7908_R, (0.62, 0.10, 0.94, 0.26)), A_FIG / "a_plates.jpg")
-    save(crop_frac(A7908_R, (0.62, 0.36, 0.94, 0.50)), A_FIG / "a_door.jpg")
-    save(crop_frac(A7908_R, (0.42, 0.78, 0.94, 0.93)), A_FIG / "a_books.jpg")
+    # A — 原卷 IMG_7907/7908 扶正后半页；只裁图
+    save(crop_frac(A7907_L, (0.64, 0.735, 0.97, 0.865)), A_FIG / "a_setsquares.jpg")
+    save(crop_frac(A7907_R, (0.55, 0.285, 0.97, 0.355)), A_FIG / "a_plane.jpg")
+    save(crop_frac(A7907_R, (0.18, 0.390, 0.88, 0.505)), A_FIG / "a_route.jpg")
+    save(crop_frac(A7907_R, (0.07, 0.738, 0.94, 0.798)), A_FIG / "a_fold_abc.jpg")
+    save(crop_frac(A7908_L, (0.34, 0.628, 0.72, 0.678)), A_FIG / "a_ray_ab.jpg")
+    save(crop_frac(A7908_R, (0.62, 0.140, 0.96, 0.230)), A_FIG / "a_plates.jpg")
+    save(crop_frac(A7908_R, (0.74, 0.365, 0.95, 0.490)), A_FIG / "a_door.jpg")
+    save(crop_frac(A7908_R, (0.58, 0.820, 0.96, 0.930)), A_FIG / "a_books.jpg")
 
-    save(crop_frac(D2, (0.62, 0.03, 0.95, 0.16)), D_FIG / "d_reflect.jpg")
-    save(crop_frac(D2, (0.10, 0.52, 0.90, 0.66)), D_FIG / "d_draw120.jpg")
-    save(crop_frac(D3, (0.10, 0.26, 0.90, 0.36)), D_FIG / "d_points_ab.jpg")
-    save(crop_frac(D3, (0.08, 0.42, 0.92, 0.58)), D_FIG / "d_angles123.jpg")
-    save(crop_frac(D4, (0.18, 0.48, 0.85, 0.60)), D_FIG / "d_printers.jpg")
+    # D — pages p02–p04
+    save(crop_frac(D2, (0.70, 0.020, 0.975, 0.140)), D_FIG / "d_reflect.jpg")
+    save(crop_frac(D2, (0.04, 0.490, 0.98, 0.560)), D_FIG / "d_draw120.jpg")
+    save(crop_frac(D3, (0.04, 0.300, 0.96, 0.370)), D_FIG / "d_points_ab.jpg")
+    save(crop_frac(D3, (0.03, 0.410, 0.98, 0.550)), D_FIG / "d_angles123.jpg")
+    save(crop_frac(D4, (0.22, 0.555, 0.78, 0.680)), D_FIG / "d_printers.jpg")
 
 
 if __name__ == "__main__":
