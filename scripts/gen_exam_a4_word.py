@@ -64,7 +64,7 @@ ANSWER_MD = {
     "u02": ROOT / "answers" / "U2_四上_第二单元_角的度量-参考答案.md",
     "u03": ROOT / "answers" / "U3_四上_第三单元_多位数乘两位数-参考答案.md",
     "u04": ROOT / "answers" / "U4_四上_第四单元_加法模型和乘法模型-参考答案.md",
-    "u05": ROOT / "answers" / "U3-U5_部分答案与题型重难点.md",
+    "u05": ROOT / "answers" / "U5_四上_第五单元_平行四边形和梯形-参考答案.md",
 }
 
 
@@ -815,33 +815,97 @@ def u05_p1() -> Document:
     q(doc, "8. 有一组直线（如右图）：", space_after=2)
     add_image(doc, DIAG / "u5_abcd_exact.jpg", 7.5, space_before=2, space_after=4)
     q(doc, "　　其中直线（　　）和直线（　　）互相垂直；直线（　　）和直线（　　）互相平行。", space_after=4)
-    footer(doc, "第五单元", 1, 2)
+    footer(doc, "第五单元", 1, 4)
     return doc
 
 
 def u05_p2() -> Document:
     doc = new_doc()
     section(doc, "二、选一选。")
-    q(doc, "1. 被遮挡图形露出两边平行，它不可能是（　　）。", size=10, space_after=1)
+    q(doc, "1. 一个图形被挡住一部分，如图所示，这个图形不可能是（　　）。", size=SIZE_BODY, space_after=2)
     add_image(doc, DIAG / "u5_obscured_exact.jpg", 5.0, space_before=1, space_after=2)
-    q(doc, "　　① 等腰梯形　　② 平行四边形　　③ 长方形　　④ 直角梯形", size=10, space_after=4)
-    q(doc, "2. 在等腰梯形中画一条直线，不能把它分成两个完全相同的（　　）。", size=10, space_after=1)
-    q(doc, "　　① 梯形　　② 平行四边形　　③ 三角形　　④ 长方形", size=10, space_after=4)
-    q(doc, "3. 两组对边分别平行的四边形是（　　）。", size=10, space_after=1)
-    q(doc, "　　① 直角梯形　　② 平行四边形　　③ 三角形　　④ 等腰梯形", size=10, space_after=4)
-    q(doc, "4. 用圆规比较线段 AB、CD 的长短（开口越大越长），结果是（　　）。", size=10, space_after=1)
+    q(doc, "　　① 等腰梯形　　② 平行四边形　　③ 长方形　　④ 直角梯形", size=SIZE_OPT, space_after=6)
+    q(doc, "2. 在一个等腰梯形中画一条直线，不能把它分成两个完全相同的（　　）。", size=SIZE_BODY, space_after=2)
+    q(doc, "　　① 梯形　　② 平行四边形　　③ 三角形　　④ 长方形", size=SIZE_OPT, space_after=6)
+    q(doc, "3. 两组对边分别平行的四边形是（　　）。", size=SIZE_BODY, space_after=2)
+    q(doc, "　　① 直角梯形　　② 平行四边形　　③ 三角形　　④ 等腰梯形", size=SIZE_OPT, space_after=6)
+    q(doc, "4. 如图，用圆规比较线段 AB、CD 的长短，结果正确的是（　　）。", size=SIZE_BODY, space_after=2)
     add_image(doc, DIAG / "u5_compass_exact.jpg", 6.8, space_before=1, space_after=2)
-    q(doc, "　　① CD＞AB　　② CD＝AB　　③ CD＜AB　　④ 无法确定", size=10, space_after=4)
-    q(doc, "5. 如图，梯形 ABCD 中 AD∥BC，点 D 沿直线向 A 运动直至重合，图形变化顺序是（　　）。", size=10, space_after=1)
-    add_image(doc, DIAG / "u5_trap_motion_exact.jpg", 6.2, space_before=1, space_after=1)
-    q(doc, "　　① 梯形→平行四边形→梯形　　② 梯形→平行四边形→三角形", size=9, space_after=1)
-    q(doc, "　　③ 梯形→三角形→平行四边形→梯形　　④ 梯形→平行四边形→梯形→三角形", size=9, space_after=4)
+    q(doc, "　　① CD＞AB　　② CD＝AB　　③ CD＜AB　　④ 无法确定", size=SIZE_OPT, space_after=6)
+    q(
+        doc,
+        "5. 如图，在梯形 ABCD 中，AD∥BC。将点 D 沿 AD 所在的直线向左平移，"
+        "直到与 A 重合后停止运动。这个图形的变化顺序是（　　）。",
+        size=SIZE_BODY,
+        space_after=2,
+    )
+    add_image(doc, DIAG / "u5_trap_motion_exact.jpg", 6.2, space_before=1, space_after=2)
+    q(doc, "　　① 梯形→平行四边形→梯形", size=SIZE_OPT, space_after=2)
+    q(doc, "　　② 梯形→平行四边形→三角形", size=SIZE_OPT, space_after=2)
+    q(doc, "　　③ 梯形→三角形→平行四边形→梯形", size=SIZE_OPT, space_after=2)
+    q(doc, "　　④ 梯形→平行四边形→梯形→三角形", size=SIZE_OPT, space_after=6)
     section(doc, "三、解决问题。")
-    q(doc, "1. （1）过角内一点 P，分别向两边作垂线。", size=10, space_after=1)
-    add_image(doc, DIAG / "u5_angle_P_exact.jpg", 5.2, space_before=1, space_after=4)
-    q(doc, "　　（2）过直线 l 上方点 A、下方点 B，分别作 l 的垂线。这两条垂线的位置关系是（　　）。", size=10, space_after=1)
-    add_image(doc, DIAG / "u5_line_AB_exact.jpg", 6.5, space_before=1, space_after=2)
-    footer(doc, "第五单元", 2, 2)
+    q(doc, "1. 按要求画出图形。", space_after=4)
+    q(doc, "　　（1）过点 P 画角两边的垂线。", space_after=2)
+    add_image(doc, DIAG / "u5_angle_P_exact.jpg", 5.5, space_before=1, space_after=6)
+    q(doc, "　　（2）分别过直线 l 上方的点 A、下方的点 B 画已知直线 l 的垂线。", space_after=2)
+    add_image(doc, DIAG / "u5_line_AB_exact.jpg", 7.0, space_before=1, space_after=4)
+    q(doc, "　　这两条垂线的位置关系是（　　）。", space_after=4)
+    footer(doc, "第五单元", 2, 4)
+    return doc
+
+
+def u05_p3() -> Document:
+    doc = new_doc()
+    q(doc, "　　（3）画出从 P 点到直线的最短线段，再量出它的长度是（　　）毫米。", space_after=2)
+    add_image(doc, DIAG / "u5_p_to_line.jpg", 9.0, space_before=2, space_after=8)
+    q(doc, "　　（4）画一个长 4 厘米、宽 3 厘米的长方形。", space_after=6)
+    gap(doc, 80)
+    q(doc, "2. 测量并回答问题。", space_after=2)
+    add_image(doc, DIAG / "u5_parallelogram_measure.jpg", 9.0, space_before=2, space_after=4)
+    q(doc, "　　（1）量出平行四边形四条边的长度，并填在横线上。", space_after=4)
+    q(doc, "　　AB＝________，BC＝________，CD＝________，DA＝________。", space_after=4)
+    q(doc, "　　通过测量边长可以知道：________________________________。", space_after=8)
+    q(doc, "　　（2）量出平行四边形四个角的度数，并填在横线上。", space_after=4)
+    q(doc, "　　∠A＝________，∠B＝________，∠C＝________，∠D＝________。", space_after=4)
+    q(doc, "　　通过测量角的度数，我发现：________________________________。", space_after=8)
+    q(doc, "3. 看图回答问题。", space_after=4)
+    q(
+        doc,
+        "　　（1）下面是一条公路的示意图，点 P 处是一个公园。从公园修一条路直达公路 AO 段，"
+        "要使修的路最短，应该怎么修？请在图上画出来。",
+        space_after=2,
+    )
+    add_image(doc, DIAG / "u5_road_AO.jpg", 10.0, space_before=2, space_after=4)
+    footer(doc, "第五单元", 3, 4)
+    return doc
+
+
+def u05_p4() -> Document:
+    doc = new_doc()
+    q(doc, "　　（2）在下面方格中分别画出一个等腰梯形和一个直角梯形，并标出梯形的各部分名称。", space_after=2)
+    add_image(doc, DIAG / "u5_grid_blank.jpg", 14.0, space_before=2, space_after=8)
+    q(
+        doc,
+        "4. 在梯形中画一条线段，可以把梯形分成两个图形。给出下面几种不同的情况，"
+        "请你先任选一种在括号里打“√”，然后在梯形中画一画。",
+        space_after=4,
+    )
+    q(doc, "　　（1）一个平行四边形和一个梯形。（　　）", space_after=3)
+    q(doc, "　　（2）两个梯形。（　　）", space_after=3)
+    q(doc, "　　（3）两个三角形。（　　）", space_after=4)
+    add_image(doc, DIAG / "u5_trap_divide.jpg", 7.5, space_before=2, space_after=10)
+    q(
+        doc,
+        "5.（选做）如图，在梯形 ABCD 中，AB∥DC，∠B＝90°，BC＝8 cm，CD＝24 cm，AB＝26 cm。"
+        "点 P 从 C 出发，以 1 cm/s 的速度向 D 运动；点 Q 从 A 出发，以 1 cm/s 的速度向 B 运动。"
+        "两点同时出发，当一个动点到达端点时，另一个动点随之停止运动。"
+        "经过多少时间，四边形 AQPD 是平行四边形？",
+        space_after=4,
+    )
+    add_image(doc, DIAG / "u5_trap_PQ.jpg", 14.0, space_before=2, space_after=6)
+    write_lines(doc, 3)
+    footer(doc, "第五单元", 4, 4)
     return doc
 
 
@@ -850,7 +914,7 @@ PAGE_BUILDERS = {
     "u02": [u02_p1, u02_p2, u02_p3, u02_p4],
     "u03": [u03_p1, u03_p2, u03_p3, u03_p4],
     "u04": [u04_p1, u04_p2, u04_p3, u04_p4],
-    "u05": [u05_p1, u05_p2],
+    "u05": [u05_p1, u05_p2, u05_p3, u05_p4],
 }
 
 

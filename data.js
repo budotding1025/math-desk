@@ -61,7 +61,7 @@ window.MATH_DESK_DATA = {
       examPdf: "printables/u05/04-考前测试/U5_四上_第五单元_平行四边形和梯形_试卷.pdf",
       examAnswerPdf: "printables/u05/04-考前测试/U5_四上_第五单元_平行四边形和梯形_答案.pdf",
       examComplete: true,
-      examPages: 2,
+      examPages: 4,
       wrongPdf: "printables/u05/05-错题库/u05-错题重练-模板.pdf",
     },
     {
